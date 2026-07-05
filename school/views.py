@@ -7,6 +7,8 @@ from .models import *
 # ========== LOGIN & LOGOUT ==========
 
 def login_view(request):
+    profile = SchoolProfile.objects.first()
+    
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -15,11 +17,24 @@ def login_view(request):
         if user is not None:
             login(request, user)
             messages.success(request, f'Welcome {username}!')
-            return redirect('dashboard')
+            
+            # Elekeza kulingana na role
+            if user.groups.filter(name='Headmaster').exists():
+                return redirect('headmaster_dashboard')
+            elif user.groups.filter(name='Accountant').exists():
+                return redirect('accountant_dashboard')
+            elif user.groups.filter(name='Teacher').exists():
+                return redirect('teacher_dashboard')
+            elif user.groups.filter(name='Parent').exists():
+                return redirect('parent_dashboard')
+            elif user.is_superuser:
+                return redirect('admin_dashboard')
+            else:
+                return redirect('dashboard')
         else:
             messages.error(request, 'Invalid username or password!')
     
-    return render(request, 'login.html')
+    return render(request, 'login.html', {'profile': profile})
 
 @login_required
 def logout_view(request):
@@ -29,18 +44,32 @@ def logout_view(request):
 
 @login_required
 def dashboard(request):
-    total_students = Student.objects.count()
-    total_teachers = Teacher.objects.count()
-    total_classes = Class.objects.count()
-    total_buses = SchoolBus.objects.count()
+    user = request.user
     
-    context = {
-        'total_students': total_students,
-        'total_teachers': total_teachers,
-        'total_classes': total_classes,
-        'total_buses': total_buses,
-    }
-    return render(request, 'dashboard.html', context)
+    # Angalia kama user ni Headmaster
+    if user.groups.filter(name='Headmaster').exists():
+        return redirect('headmaster_dashboard')
+    
+    # Angalia kama user ni Accountant
+    elif user.groups.filter(name='Accountant').exists():
+        return redirect('accountant_dashboard')
+    
+    # Angalia kama user ni Teacher
+    elif user.groups.filter(name='Teacher').exists():
+        return redirect('teacher_dashboard')
+    
+    # Angalia kama user ni Parent
+    elif user.groups.filter(name='Parent').exists():
+        return redirect('parent_dashboard')
+    
+    # Kama ni admin (superuser)
+    elif user.is_superuser:
+        return redirect('admin_dashboard')
+    
+    # Kama hakuna role
+    else:
+        messages.error(request, 'No role assigned to your account.')
+        return redirect('login')
 
 # ========== HEADMASTER FEATURES ==========
 
