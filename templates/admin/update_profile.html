@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Update School Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        body { background: #f5f5f5; }
+        .sidebar {
+            min-height: 100vh;
+            background: #2c3e50;
+            color: white;
+            padding: 20px 0;
+        }
+        .sidebar a {
+            color: #ecf0f1;
+            text-decoration: none;
+            display: block;
+            padding: 12px 20px;
+            border-left: 3px solid transparent;
+        }
+        .sidebar a:hover {
+            background: #34495e;
+            border-left: 3px solid #e74c3c;
+        }
+        .sidebar a i { margin-right: 10px; }
+        .main-content { padding: 30px; }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar">
+                <h4 class="text-center py-3">🏫 HINAYA</h4>
+                <hr>
+                <a href="/superadmin_dashboard/">
+                    <i class="bi bi-speedometer2"></i> Dashboard
+                </a>
+                <a href="/superadmin/update_profile/">
+                    <i class="bi bi-building"></i> School Profile
+                </a>
+                <hr>
+                <a href="/logout/">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+            
+            <div class="col-md-10 main-content">
+                <h2><i class="bi bi-building"></i> Update School Profile</h2>
+                <p>Update school details that will appear on reports</p>
+                
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-success">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+                
+                <div class="form-container">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">School Name</label>
+                                    <input type="text" name="school_name" class="form-control" 
+                                           value="{{ profile.school_name|default:'HINAYA PRE AND PRIMARY SCHOOL' }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Location</label>
+                                    <input type="text" name="location" class="form-control" 
+                                           value="{{ profile.location|default:'' }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea name="address" class="form-control" rows="2">{{ profile.address|default:'' }}</textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Phone</label>
+                                    <input type="text" name="phone" class="form-control" 
+                                           value="{{ profile.phone|default:'' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Email</label>
+                                    <input type="email" name="email" class="form-control" 
+                                           value="{{ profile.email|default:'' }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Bank Name</label>
+                                    <input type="text" name="bank_name" class="form-control" 
+                                           value="{{ profile.bank_name|default:'' }}">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Bank Account</label>
+                                    <input type="text" name="bank_account" class="form-control" 
+                                           value="{{ profile.bank_account|default:'' }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> Save Profile
+                        </button>
+                        <a href="/superadmin/" class="btn btn-secondary">Back</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

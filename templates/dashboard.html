@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        body { background: #f5f5f5; }
+        .navbar { background: #2c3e50; padding: 15px; }
+        .navbar-brand { color: white; font-weight: bold; font-size: 1.5rem; }
+        .nav-link { color: white; }
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-card h2 { font-size: 3rem; margin: 0; color: #2c3e50; }
+        .stat-card p { color: #7f8c8d; margin: 0; font-size: 1.1rem; }
+        .stat-card .icon { font-size: 2.5rem; margin-bottom: 10px; }
+        .stat-card.students .icon { color: #3498db; }
+        .stat-card.teachers .icon { color: #e67e22; }
+        .stat-card.classes .icon { color: #27ae60; }
+        .stat-card.buses .icon { color: #8e44ad; }
+        .main-content { padding: 30px; }
+        .card-link {
+            text-decoration: none;
+            color: inherit;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand">🏫 HINAYA School</span>
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3">
+                    <i class="bi bi-person-circle"></i> {{ user.get_full_name|default:user.username }}
+                </span>
+                <a href="/logout/" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-box-arrow-right"></i> Logout
+                </a>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Main Content -->
+    <div class="container-fluid main-content">
+        <h2><i class="bi bi-speedometer2"></i> Dashboard</h2>
+        <p class="text-muted">Welcome back, {{ user.first_name }}!</p>
+        
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <a href="/headmaster/students/" class="card-link">
+                    <div class="stat-card students">
+                        <div class="icon"><i class="bi bi-people"></i></div>
+                        <h2>{{ total_students|default:0 }}</h2>
+                        <p>Total Students</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="/headmaster/teachers/" class="card-link">
+                    <div class="stat-card teachers">
+                        <div class="icon"><i class="bi bi-person-badge"></i></div>
+                        <h2>{{ total_teachers|default:0 }}</h2>
+                        <p>Total Teachers</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="/headmaster/" class="card-link">
+                    <div class="stat-card classes">
+                        <div class="icon"><i class="bi bi-book"></i></div>
+                        <h2>{{ total_classes|default:0 }}</h2>
+                        <p>Total Classes</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="/headmaster/buses/" class="card-link">
+                    <div class="stat-card buses">
+                        <div class="icon"><i class="bi bi-bus-front"></i></div>
+                        <h2>{{ total_buses|default:0 }}</h2>
+                        <p>Total Buses</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5><i class="bi bi-lightning"></i> Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <a href="/headmaster/add_student/" class="btn btn-outline-primary w-100 mb-2">
+                                    <i class="bi bi-person-plus"></i> Add Student
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/headmaster/add_teacher/" class="btn btn-outline-success w-100 mb-2">
+                                    <i class="bi bi-person-plus"></i> Add Teacher
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/headmaster/add_bus/" class="btn btn-outline-warning w-100 mb-2">
+                                    <i class="bi bi-bus-front"></i> Add Bus
+                                </a>
+                            </div>
+                            <div class="col-md-3">
+                                <a href="/headmaster/promote/" class="btn btn-outline-danger w-100 mb-2">
+                                    <i class="bi bi-arrow-up"></i> Promote
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
