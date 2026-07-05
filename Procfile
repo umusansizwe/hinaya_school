@@ -1,0 +1,1 @@
+web: gunicorn hinaya_school.wsgi:application
