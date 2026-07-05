@@ -188,6 +188,11 @@ def add_teacher(request):
         gender = request.POST.get('gender')
         subject_ids = request.POST.getlist('subjects')
         
+        # Hakikisha username haijatumika
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already exists!')
+            return redirect('add_teacher')
+        
         # Unda User
         user = User.objects.create_user(
             username=username,
@@ -213,6 +218,7 @@ def add_teacher(request):
     
     subjects = Subject.objects.all()
     return render(request, 'headmaster/add_teacher.html', {'subjects': subjects})
+
 # ========== DELETE TEACHER ==========
 
 @login_required
