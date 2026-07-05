@@ -121,6 +121,7 @@ def add_student(request):
         address = request.POST.get('address')
         class_id = request.POST.get('current_class')
         
+        # Unda mwanafunzi
         student = Student.objects.create(
             first_name=first_name,
             last_name=last_name,
@@ -133,11 +134,34 @@ def add_student(request):
             current_class_id=class_id
         )
         
+        # Ikiwa parent_email ipo, unda user na group ya Parent
+        if parent_email:
+            from django.contrib.auth.models import Group, User
+            # Hakikisha user haijawahi kuundwa
+            if not User.objects.filter(email=parent_email).exists():
+                # Unda username kutoka email
+                username = parent_email.split('@')[0]
+                # Hakikisha username ni unique
+                if User.objects.filter(username=username).exists():
+                    username = f"{username}_{student.id}"
+                
+                # Unda user
+                user = User.objects.create_user(
+                    username=username,
+                    password='parent123',  # Default password
+                    email=parent_email,
+                    first_name=parent_name
+                )
+                # Weka group ya Parent
+                parent_group, created = Group.objects.get_or_create(name='Parent')
+                user.groups.add(parent_group)
+        
         messages.success(request, f'Student {first_name} {last_name} added successfully!')
         return redirect('headmaster_dashboard')
     
     classes = Class.objects.all()
     return render(request, 'headmaster/add_student.html', {'classes': classes})
+
 # ========== DELETE STUDENT ==========
 
 @login_required
@@ -201,6 +225,11 @@ def add_teacher(request):
             last_name=last_name,
             email=email
         )
+        
+        # WEKA GROUP YA TEACHER MOJA KWA MOJA
+        from django.contrib.auth.models import Group
+        teacher_group, created = Group.objects.get_or_create(name='Teacher')
+        user.groups.add(teacher_group)
         
         # Unda Teacher
         teacher = Teacher.objects.create(
