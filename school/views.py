@@ -211,6 +211,7 @@ def add_teacher(request):
         phone = request.POST.get('phone')
         gender = request.POST.get('gender')
         subject_ids = request.POST.getlist('subjects')
+        assigned_class_id = request.POST.get('assigned_class')
         
         # Hakikisha username haijatumika
         if User.objects.filter(username=username).exists():
@@ -226,7 +227,7 @@ def add_teacher(request):
             email=email
         )
         
-        # WEKA GROUP YA TEACHER MOJA KWA MOJA
+        # Weka Group ya Teacher
         from django.contrib.auth.models import Group
         teacher_group, created = Group.objects.get_or_create(name='Teacher')
         user.groups.add(teacher_group)
@@ -235,7 +236,8 @@ def add_teacher(request):
         teacher = Teacher.objects.create(
             user=user,
             phone=phone,
-            gender=gender
+            gender=gender,
+            assigned_class_id=assigned_class_id if assigned_class_id else None
         )
         
         # Ongeza Subjects
@@ -246,7 +248,15 @@ def add_teacher(request):
         return redirect('headmaster_teachers')
     
     subjects = Subject.objects.all()
-    return render(request, 'headmaster/add_teacher.html', {'subjects': subjects})
+    classes = Class.objects.all()
+    terms = AcademicTerm.objects.filter(is_active=True)
+    
+    context = {
+        'subjects': subjects,
+        'classes': classes,
+        'terms': terms,
+    }
+    return render(request, 'headmaster/add_teacher.html', context)
 
 # ========== DELETE TEACHER ==========
 
@@ -299,8 +309,12 @@ def delete_bus(request, bus_id):
 
 @login_required
 def accountant_dashboard(request):
+    # Wanafunzi wote
+    all_students = Student.objects.all()
+    
     # Wanafunzi wenye deni
     debtors = Fee.objects.filter(balance__gt=0).select_related('student')
+    
     # Waliomaliza deni
     completed = Fee.objects.filter(is_completed=True).select_related('student')
     
@@ -308,6 +322,7 @@ def accountant_dashboard(request):
     total_debt = Fee.objects.aggregate(total=models.Sum('balance'))['total'] or 0
     
     context = {
+        'all_students': all_students,
         'debtors': debtors,
         'completed': completed,
         'total_debt': total_debt,

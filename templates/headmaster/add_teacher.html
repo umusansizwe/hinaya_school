@@ -16,7 +16,7 @@
                     <div class="card-body">
                         {% if messages %}
                             {% for message in messages %}
-                                <div class="alert alert-danger">{{ message }}</div>
+                                <div class="alert alert-success">{{ message }}</div>
                             {% endfor %}
                         {% endif %}
                         
@@ -80,6 +80,20 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
+                                        <label>Assigned Class</label>
+                                        <select name="assigned_class" class="form-control">
+                                            <option value="">Select Class</option>
+                                            {% for class in classes %}
+                                                <option value="{{ class.id }}">{{ class.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
                                         <label>Subjects</label>
                                         <select name="subjects" class="form-control" multiple>
                                             {% for subject in subjects %}
@@ -87,6 +101,17 @@
                                             {% endfor %}
                                         </select>
                                         <small class="text-muted">Hold Ctrl to select multiple</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label>Academic Term</label>
+                                        <select name="academic_term" class="form-control">
+                                            <option value="">Select Term</option>
+                                            {% for term in terms %}
+                                                <option value="{{ term.id }}">{{ term.name }} - {{ term.year }}</option>
+                                            {% endfor %}
+                                        </select>
                                     </div>
                                 </div>
                             </div>
