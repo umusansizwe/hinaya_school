@@ -26,7 +26,7 @@ urlpatterns = [
     path('teacher/add_marks/', views.add_marks, name='add_marks'),
     path('parent/', views.parent_dashboard, name='parent_dashboard'),
     path('parent/send_message/', views.send_message, name='send_message'),
-    path('school-admin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
-    path('school-admin/update_profile/', views.update_school_profile, name='update_school_profile'),
+    path('superadmin_dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('superadmin/update_profile/', views.update_school_profile, name='update_school_profile'),
     path('headmaster/academic_history/<int:student_id>/', views.academic_history, name='academic_history'),
 ]
