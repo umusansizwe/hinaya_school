@@ -1,117 +1,34 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Academic History</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
-</head>
-<body>
-    <div class="container mt-5">
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h4><i class="bi bi-file-text"></i> Academic History</h4>
-            </div>
-            <div class="card-body">
-                <h5>{{ student.first_name }} {{ student.last_name }}</h5>
-                <p><strong>Class:</strong> {{ student.current_class }}</p>
-                <hr>
-                
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="alert alert-info">
-                            <h5>Total Subjects</h5>
-                            <h2>{{ total_subjects }}</h2>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="alert alert-success">
-                            <h5>Total Score</h5>
-                            <h2>{{ total_score }}</h2>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="alert alert-warning">
-                            <h5>Average</h5>
-                            <h2>{{ average }}</h2>
-                        </div>
-                    </div>
-                </div>
-                
-                <h5 class="mt-4">Grades by Term</h5>
-                {% for term, term_grades in term_grades.items %}
-                    {% if term_grades %}
-                    <h6>{{ term.name }} - {{ term.year }}</h6>
-                    <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Subject</th>
-                                <th>Score</th>
-                                <th>Grade</th>
-                                <th>Remarks</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for grade in term_grades %}
-                            <tr>
-                                <td>{{ grade.subject.name }}</td>
-                                <td>{{ grade.score }}</td>
-                                <td>
-                                    {% if grade.score >= 80 %}A
-                                    {% elif grade.score >= 60 %}B
-                                    {% elif grade.score >= 50 %}C
-                                    {% elif grade.score >= 40 %}D
-                                    {% else %}F
-                                    {% endif %}
-                                </td>
-                                <td>{{ grade.remarks }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+{% for term, grade_list in term_grades.items %}
+    {% if grade_list %}
+    <h6 class="mt-3">{{ term.name }} - {{ term.year }}</h6>
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Subject</th>
+                <th>Score</th>
+                <th>Grade</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for grade in grade_list %}
+            <tr>
+                <td>{{ grade.subject.name }}</td>
+                <td>{{ grade.score }}</td>
+                <td>
+                    {% if grade.score >= 80 %}A
+                    {% elif grade.score >= 60 %}B
+                    {% elif grade.score >= 50 %}C
+                    {% elif grade.score >= 40 %}D
+                    {% else %}F
                     {% endif %}
-                {% empty %}
-                <p>No grades available.</p>
-                {% endfor %}
-                
-                <h5 class="mt-4">Fee History</h5>
-                {% if fees %}
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Term</th>
-                            <th>Total Fee</th>
-                            <th>Paid</th>
-                            <th>Balance</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for fee in fees %}
-                        <tr>
-                            <td>{{ fee.term.name }} - {{ fee.term.year }}</td>
-                            <td>{{ fee.total_fee }}</td>
-                            <td>{{ fee.amount_paid }}</td>
-                            <td class="{% if fee.balance > 0 %}text-danger{% else %}text-success{% endif %}">
-                                {{ fee.balance }}
-                            </td>
-                            <td>
-                                {% if fee.is_completed %}
-                                    <span class="badge bg-success">Completed</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Pending</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                {% else %}
-                <p>No fee records available.</p>
-                {% endif %}
-                
-                <a href="/headmaster/students/" class="btn btn-secondary mt-3">Back to Students</a>
-            </div>
-        </div>
-    </div>
-</body>
-</html>
+                </td>
+                <td>{{ grade.remarks }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+{% empty %}
+<p>No grades available.</p>
+{% endfor %}

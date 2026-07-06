@@ -149,15 +149,16 @@ def headmaster_dashboard(request):
         'total_classes': classes.count(),
     }
     return render(request, 'headmaster/dashboard.html', context)
+
 @login_required
 def academic_history(request, student_id):
     try:
         student = get_object_or_404(Student, id=student_id)
         
-        # Pata grades zote za mwanafunzi
+        # Pata grades
         grades = Grade.objects.filter(student=student)
         
-        # Pata terms zote
+        # Pata terms
         terms = AcademicTerm.objects.all().order_by('-year', 'name')
         
         # Panga grades kwa term
@@ -168,10 +169,15 @@ def academic_history(request, student_id):
         # Pata fee history
         fees = Fee.objects.filter(student=student)
         
-        # Hesabu total na average
-        total_score = sum([g.score for g in grades]) if grades else 0
+        # Hesabu
+        total_score = 0
+        for g in grades:
+            total_score += g.score
+        
         total_subjects = grades.count()
-        average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
+        average = 0
+        if total_subjects > 0:
+            average = total_score / total_subjects
         
         context = {
             'student': student,
@@ -181,12 +187,12 @@ def academic_history(request, student_id):
             'fees': fees,
             'total_subjects': total_subjects,
             'total_score': total_score,
-            'average': average,
+            'average': round(average, 2),
         }
+        
         return render(request, 'headmaster/academic_history.html', context)
     
     except Exception as e:
-        # Ongeza error handling
         messages.error(request, f'Error: {str(e)}')
         return redirect('headmaster_students')
 
