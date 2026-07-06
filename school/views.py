@@ -151,29 +151,44 @@ def headmaster_dashboard(request):
     return render(request, 'headmaster/dashboard.html', context)
 @login_required
 def academic_history(request, student_id):
-    student = get_object_or_404(Student, id=student_id)
+    try:
+        student = get_object_or_404(Student, id=student_id)
+        
+        # Pata grades zote za mwanafunzi
+        grades = Grade.objects.filter(student=student)
+        
+        # Pata terms zote
+        terms = AcademicTerm.objects.all().order_by('-year', 'name')
+        
+        # Panga grades kwa term
+        term_grades = {}
+        for term in terms:
+            term_grades[term] = Grade.objects.filter(student=student, term=term)
+        
+        # Pata fee history
+        fees = Fee.objects.filter(student=student)
+        
+        # Hesabu total na average
+        total_score = sum([g.score for g in grades]) if grades else 0
+        total_subjects = grades.count()
+        average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
+        
+        context = {
+            'student': student,
+            'grades': grades,
+            'terms': terms,
+            'term_grades': term_grades,
+            'fees': fees,
+            'total_subjects': total_subjects,
+            'total_score': total_score,
+            'average': average,
+        }
+        return render(request, 'headmaster/academic_history.html', context)
     
-    # HIZI NI MPYA
-    grades = Grade.objects.filter(student=student)
-    terms = AcademicTerm.objects.all().order_by('-year', 'name')
-    
-    term_grades = {}
-    for term in terms:
-        term_grades[term] = Grade.objects.filter(student=student, term=term)
-    
-    fees = Fee.objects.filter(student=student)
-    
-    context = {
-        'student': student,
-        'grades': grades,  # HII TA YARI INAPO
-        'terms': terms,  # MPYA
-        'term_grades': term_grades,  # MPYA
-        'fees': fees,  # MPYA
-        'total_subjects': grades.count(),  # MPYA
-        'total_score': sum([g.score for g in grades]),  # MPYA
-        'average': round(sum([g.score for g in grades]) / grades.count(), 2) if grades.count() > 0 else 0,  # MPYA
-    }
-    return render(request, 'headmaster/academic_history.html', context)
+    except Exception as e:
+        # Ongeza error handling
+        messages.error(request, f'Error: {str(e)}')
+        return redirect('headmaster_students')
 
 @login_required
 def headmaster_students(request):
