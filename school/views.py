@@ -91,6 +91,89 @@ def headmaster_dashboard(request):
         'total_classes': classes.count(),
     }
     return render(request, 'headmaster/dashboard.html', context)
+@login_required
+def headmaster_dashboard(request):
+    students = Student.objects.all()
+    teachers = Teacher.objects.all()
+    buses = SchoolBus.objects.all()
+    classes = Class.objects.all()
+    
+    # ONGEZA HIZI - FILTERS
+    selected_class_id = request.GET.get('class_id')
+    if selected_class_id:
+        filtered_students = Student.objects.filter(current_class_id=selected_class_id, is_active=True)
+    else:
+        filtered_students = students.filter(is_active=True)
+    
+    selected_term_id = request.GET.get('term_id')
+    if selected_term_id:
+        selected_term = AcademicTerm.objects.filter(id=selected_term_id).first()
+    else:
+        selected_term = AcademicTerm.objects.filter(is_active=True).first()
+    
+    # ONGEZA HIZI - STUDENT REPORTS
+    student_reports = []
+    for student in filtered_students:
+        grades = Grade.objects.filter(student=student)
+        if selected_term:
+            grades = grades.filter(term=selected_term)
+        
+        total_score = sum([g.score for g in grades]) if grades else 0
+        average = total_score / grades.count() if grades.count() > 0 else 0
+        fee = Fee.objects.filter(student=student).first()
+        
+        student_reports.append({
+            'student': student,
+            'grades': grades,
+            'total_score': total_score,
+            'average': round(average, 2),
+            'subjects_count': grades.count(),
+            'fee': fee,
+            'balance': fee.balance if fee else 0,
+        })
+    
+    context = {
+        'students': students,  # HII TA YARI INAPO
+        'teachers': teachers,  # HII TA YARI INAPO
+        'buses': buses,  # HII TA YARI INAPO
+        'classes': classes,  # HII TA YARI INAPO
+        # ONGEZA HIZI MPYA
+        'filtered_students': filtered_students,
+        'student_reports': student_reports,
+        'selected_class_id': selected_class_id,
+        'selected_term': selected_term,
+        'terms': AcademicTerm.objects.all(),
+        'total_students': students.count(),
+        'total_teachers': teachers.count(),
+        'total_buses': buses.count(),
+        'total_classes': classes.count(),
+    }
+    return render(request, 'headmaster/dashboard.html', context)
+@login_required
+def academic_history(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    
+    # HIZI NI MPYA
+    grades = Grade.objects.filter(student=student)
+    terms = AcademicTerm.objects.all().order_by('-year', 'name')
+    
+    term_grades = {}
+    for term in terms:
+        term_grades[term] = Grade.objects.filter(student=student, term=term)
+    
+    fees = Fee.objects.filter(student=student)
+    
+    context = {
+        'student': student,
+        'grades': grades,  # HII TA YARI INAPO
+        'terms': terms,  # MPYA
+        'term_grades': term_grades,  # MPYA
+        'fees': fees,  # MPYA
+        'total_subjects': grades.count(),  # MPYA
+        'total_score': sum([g.score for g in grades]),  # MPYA
+        'average': round(sum([g.score for g in grades]) / grades.count(), 2) if grades.count() > 0 else 0,  # MPYA
+    }
+    return render(request, 'headmaster/academic_history.html', context)
 
 @login_required
 def headmaster_students(request):
