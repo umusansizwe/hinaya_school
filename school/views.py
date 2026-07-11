@@ -583,27 +583,35 @@ def update_school_profile(request):
 
 @login_required
 def view_student_report(request, student_id):
-    from .models import Student, Grade, Fee, AcademicTerm, SchoolProfile
+    try:
+        student = get_object_or_404(Student, id=student_id)
+        grades = Grade.objects.filter(student=student)
+        fees = Fee.objects.filter(student=student)
+        school_profile = SchoolProfile.objects.first()
+        
+        total_score = 0
+        for grade in grades:
+            total_score += grade.score
+        
+        total_subjects = grades.count()
+        if total_subjects > 0:
+            average = round(total_score / total_subjects, 2)
+        else:
+            average = 0
+        
+        context = {
+            'student': student,
+            'grades': grades,
+            'fees': fees,
+            'school_profile': school_profile,
+            'total_score': total_score,
+            'total_subjects': total_subjects,
+            'average': average,
+        }
+        return render(request, 'headmaster/student_report.html', context)
     
-    student = get_object_or_404(Student, id=student_id)
-    grades = Grade.objects.filter(student=student)
-    fees = Fee.objects.filter(student=student)
-    terms = AcademicTerm.objects.all().order_by('-year', 'name')
-    school_profile = SchoolProfile.objects.first()
-    
-    total_score = sum([g.score for g in grades]) if grades else 0
-    total_subjects = grades.count()
-    average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
-    
-    context = {
-        'student': student,
-        'grades': grades,
-        'fees': fees,
-        'terms': terms,
-        'school_profile': school_profile,
-        'total_score': total_score,
-        'total_subjects': total_subjects,
-        'average': average,
-        'selected_term': terms.first(),
-    }
-    return render(request, 'headmaster/student_report.html', context)
+    except Exception as e:
+        return render(request, 'headmaster/student_report.html', {
+            'error': str(e),
+            'student': None
+        })
