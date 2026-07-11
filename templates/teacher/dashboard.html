@@ -13,7 +13,11 @@
             </div>
             <div class="card-body">
                 <h4>Welcome, {{ teacher.user.first_name }} {{ teacher.user.last_name }}</h4>
-                <p><strong>Class:</strong> {{ teacher.assigned_class }}</p>
+                <p><strong>Classes:</strong> 
+                    {% for class in assigned_classes %}
+                        {{ class.name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </p>
                 <hr>
                 
                 <div class="row">
@@ -38,6 +42,7 @@
                             <th>#</th>
                             <th>Name</th>
                             <th>Gender</th>
+                            <th>Class</th>
                             <th>Parent</th>
                         </tr>
                     </thead>
@@ -47,11 +52,12 @@
                             <td>{{ forloop.counter }}</td>
                             <td>{{ student.first_name }} {{ student.last_name }}</td>
                             <td>{{ student.gender }}</td>
+                            <td>{{ student.current_class }}</td>
                             <td>{{ student.parent_name }}</td>
                         </tr>
                         {% empty %}
                         <tr>
-                            <td colspan="4" class="text-center">No students assigned to your class.</td>
+                            <td colspan="5" class="text-center">No students assigned to your classes.</td>
                         </tr>
                         {% endfor %}
                     </tbody>

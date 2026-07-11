@@ -40,7 +40,7 @@ class Teacher(models.Model):
     gender = models.CharField(max_length=1, choices=GENDER_CHOICES)
     subjects = models.ManyToManyField(Subject, blank=True)
     hire_date = models.DateField(auto_now_add=True)
-    assigned_class = models.ForeignKey(Class, on_delete=models.SET_NULL, null=True, blank=True)
+    assigned_classes = models.ManyToManyField(Class, blank=True)  # Badilisha kuwa ManyToMany
     
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}"

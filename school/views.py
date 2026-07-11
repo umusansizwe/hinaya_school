@@ -300,7 +300,7 @@ def add_teacher(request):
         phone = request.POST.get('phone')
         gender = request.POST.get('gender')
         subject_ids = request.POST.getlist('subjects')
-        assigned_class_id = request.POST.get('assigned_class')
+        assigned_class_ids = request.POST.getlist('assigned_classes')  # Badilisha kuwa list
         
         # Hakikisha username haijatumika
         if User.objects.filter(username=username).exists():
@@ -320,17 +320,22 @@ def add_teacher(request):
         teacher_group, created = Group.objects.get_or_create(name='Teacher')
         user.groups.add(teacher_group)
         
-        # Unda Teacher
+        # Unda Teacher (bila assigned_class kwa sasa)
         teacher = Teacher.objects.create(
             user=user,
             phone=phone,
-            gender=gender,
-            assigned_class_id=assigned_class_id if assigned_class_id else None
+            gender=gender
         )
         
         # Ongeza Subjects
         if subject_ids:
             teacher.subjects.set(subject_ids)
+        
+        # Ongeza madarasa mengi
+        if assigned_class_ids:
+            for class_id in assigned_class_ids:
+                class_obj = Class.objects.get(id=class_id)
+                teacher.assigned_classes.add(class_obj)
         
         messages.success(request, f'Teacher {first_name} {last_name} added successfully!')
         return redirect('headmaster_teachers')
@@ -345,7 +350,6 @@ def add_teacher(request):
         'terms': terms,
     }
     return render(request, 'headmaster/add_teacher.html', context)
-
 # ========== DELETE TEACHER ==========
 
 @login_required
@@ -447,7 +451,8 @@ def add_payment(request):
 def teacher_dashboard(request):
     try:
         teacher = Teacher.objects.get(user=request.user)
-        students = Student.objects.filter(current_class=teacher.assigned_class, is_active=True)
+        # Pata wanafunzi wa madarasa yote ya mwalimu
+        students = Student.objects.filter(current_class__in=teacher.assigned_classes.all(), is_active=True)
         subjects = teacher.subjects.all()
         
         context = {
@@ -456,6 +461,7 @@ def teacher_dashboard(request):
             'subjects': subjects,
             'total_students': students.count(),
             'total_subjects': subjects.count(),
+            'assigned_classes': teacher.assigned_classes.all(),
         }
         return render(request, 'teacher/dashboard.html', context)
     except Teacher.DoesNotExist:

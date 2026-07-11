@@ -209,30 +209,29 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label>Assigned Class</label>
-                                        <select name="assigned_class" class="form-control" required>
-                                            <option value="">Select Class</option>
-                                            {% for class in classes %}
-                                                <option value="{{ class.id }}">{{ class.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <small class="text-muted">Class this teacher will teach</small>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label>Subjects</label>
-                                        <select name="subjects" class="form-control" multiple>
-                                            {% for subject in subjects %}
-                                                <option value="{{ subject.id }}">{{ subject.name }}</option>
-                                            {% endfor %}
-                                        </select>
-                                        <small class="text-muted">Hold Ctrl to select multiple</small>
-                                    </div>
+                                    <div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label>Gender</label>
+            <select name="gender" class="form-control" required>
+                <option value="">Select</option>
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+            </select>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label>Assigned Classes</label>
+            <select name="assigned_classes" class="form-control" multiple>
+                {% for class in classes %}
+                    <option value="{{ class.id }}">{{ class.name }}</option>
+                {% endfor %}
+            </select>
+            <small class="text-muted">Hold Ctrl to select multiple classes</small>
+        </div>
+    </div>
+</div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
