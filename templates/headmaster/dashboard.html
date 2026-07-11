@@ -42,11 +42,6 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             margin-bottom: 20px;
         }
-        .grade-A { color: #27ae60; font-weight: bold; }
-        .grade-B { color: #f39c12; font-weight: bold; }
-        .grade-C { color: #e67e22; font-weight: bold; }
-        .grade-D { color: #e74c3c; font-weight: bold; }
-        .grade-F { color: #c0392b; font-weight: bold; }
         .modal-lg { max-width: 800px; }
         .school-header { border-bottom: 3px solid #2c3e50; padding-bottom: 15px; margin-bottom: 20px; }
         .signature-img { max-height: 60px; }
@@ -101,7 +96,7 @@
                 <h2><i class="bi bi-speedometer2"></i> Headmaster Dashboard</h2>
                 <p>Welcome, {{ user.first_name }} {{ user.last_name }}</p>
                 
-                <!-- Stats -->
+                <!-- Stats Cards -->
                 <div class="row mt-4">
                     <div class="col-md-3">
                         <a href="/headmaster/students/" style="text-decoration:none;color:inherit;">
@@ -170,7 +165,7 @@
                     </form>
                 </div>
                 
-                <!-- Students Table with View Report Button -->
+                <!-- Students Table -->
                 <div class="mt-4">
                     <div class="card">
                         <div class="card-header bg-primary text-white">
@@ -223,7 +218,7 @@
     </div>
     
     <!-- ============================================ -->
-    <!-- MODALS FOR STUDENT REPORTS (POPUP REPORTS)   -->
+    <!-- MODALS FOR STUDENT REPORTS                   -->
     <!-- ============================================ -->
     {% for student in filtered_students %}
     <div class="modal fade" id="reportModal{{ student.id }}" tabindex="-1">
@@ -305,60 +300,6 @@
                             </tr>
                             {% endfor %}
                         </tbody>
-                        {% with grades=student.grade_set.all %}
-                            {% if grades %}
-                            <tfoot>
-                                <tr class="table-secondary">
-                                    <th colspan="1">Summary</th>
-                                    <th>
-                                        {% with total=0 %}
-                                            {% for g in grades %}
-                                                {% if not selected_term or g.term.id == selected_term.id %}
-                                                    {% with total=total|add:g.score %}{% endwith %}
-                                                {% endif %}
-                                            {% endfor %}
-                                            {{ total }}
-                                        {% endwith %}
-                                    </th>
-                                    <th>
-                                        {% with total=0 count=0 %}
-                                            {% for g in grades %}
-                                                {% if not selected_term or g.term.id == selected_term.id %}
-                                                    {% with total=total|add:g.score count=count|add:1 %}{% endwith %}
-                                                {% endif %}
-                                            {% endfor %}
-                                            {% if count > 0 %}
-                                                {{ total|divisibleby:count|floatformat:2 }}%
-                                            {% else %}
-                                                0%
-                                            {% endif %}
-                                        {% endwith %}
-                                    </th>
-                                    <th>
-                                        {% with total=0 count=0 %}
-                                            {% for g in grades %}
-                                                {% if not selected_term or g.term.id == selected_term.id %}
-                                                    {% with total=total|add:g.score count=count|add:1 %}{% endwith %}
-                                                {% endif %}
-                                            {% endfor %}
-                                            {% if count > 0 %}
-                                                {% with avg=total|divisibleby:count %}
-                                                    {% if avg >= 80 %}Excellent
-                                                    {% elif avg >= 60 %}Good
-                                                    {% elif avg >= 50 %}Satisfactory
-                                                    {% elif avg >= 40 %}Needs Improvement
-                                                    {% else %}Poor
-                                                    {% endif %}
-                                                {% endwith %}
-                                            {% else %}
-                                                No data
-                                            {% endif %}
-                                        {% endwith %}
-                                    </th>
-                                </tr>
-                            </tfoot>
-                            {% endif %}
-                        {% endwith %}
                     </table>
                     
                     <!-- Fee Summary -->
