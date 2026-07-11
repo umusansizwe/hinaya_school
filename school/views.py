@@ -131,6 +131,16 @@ def headmaster_dashboard(request):
         'school_profile': school_profile,
     }
     return render(request, 'headmaster/dashboard.html', context)
+@login_required
+def headmaster_students(request):
+    students = Student.objects.filter(is_active=True)
+    school_profile = SchoolProfile.objects.first()
+    
+    context = {
+        'students': students,
+        'school_profile': school_profile,
+    }
+    return render(request, 'headmaster/students.html', context)
 
 @login_required
 def headmaster_students(request):
@@ -570,3 +580,30 @@ def update_school_profile(request):
         return redirect('admin_dashboard')
     
     return render(request, 'admin/update_profile.html', {'profile': profile})
+
+@login_required
+def view_student_report(request, student_id):
+    from .models import Student, Grade, Fee, AcademicTerm, SchoolProfile
+    
+    student = get_object_or_404(Student, id=student_id)
+    grades = Grade.objects.filter(student=student)
+    fees = Fee.objects.filter(student=student)
+    terms = AcademicTerm.objects.all().order_by('-year', 'name')
+    school_profile = SchoolProfile.objects.first()
+    
+    total_score = sum([g.score for g in grades]) if grades else 0
+    total_subjects = grades.count()
+    average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
+    
+    context = {
+        'student': student,
+        'grades': grades,
+        'fees': fees,
+        'terms': terms,
+        'school_profile': school_profile,
+        'total_score': total_score,
+        'total_subjects': total_subjects,
+        'average': average,
+        'selected_term': terms.first(),
+    }
+    return render(request, 'headmaster/student_report.html', context)

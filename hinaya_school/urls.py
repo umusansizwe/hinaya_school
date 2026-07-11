@@ -20,6 +20,7 @@ urlpatterns = [
     path('headmaster/delete_teacher/<int:teacher_id>/', views.delete_teacher, name='delete_teacher'),
     path('headmaster/add_bus/', views.add_bus, name='add_bus'),
     path('headmaster/delete_bus/<int:bus_id>/', views.delete_bus, name='delete_bus'),
+    path('headmaster/student_report/<int:student_id>/', views.view_student_report, name='view_student_report'),
     
     # Accountant URLs
     path('accountant/', views.accountant_dashboard, name='accountant_dashboard'),
