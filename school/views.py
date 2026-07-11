@@ -98,48 +98,29 @@ def headmaster_dashboard(request):
     buses = SchoolBus.objects.all()
     classes = Class.objects.all()
     
-    # ONGEZA HIZI - FILTERS
+    # Filter students by class
     selected_class_id = request.GET.get('class_id')
     if selected_class_id:
         filtered_students = Student.objects.filter(current_class_id=selected_class_id, is_active=True)
     else:
         filtered_students = students.filter(is_active=True)
     
+    # Get selected term
     selected_term_id = request.GET.get('term_id')
     if selected_term_id:
         selected_term = AcademicTerm.objects.filter(id=selected_term_id).first()
     else:
         selected_term = AcademicTerm.objects.filter(is_active=True).first()
     
-    # ONGEZA HIZI - STUDENT REPORTS
-    student_reports = []
-    for student in filtered_students:
-        grades = Grade.objects.filter(student=student)
-        if selected_term:
-            grades = grades.filter(term=selected_term)
-        
-        total_score = sum([g.score for g in grades]) if grades else 0
-        average = total_score / grades.count() if grades.count() > 0 else 0
-        fee = Fee.objects.filter(student=student).first()
-        
-        student_reports.append({
-            'student': student,
-            'grades': grades,
-            'total_score': total_score,
-            'average': round(average, 2),
-            'subjects_count': grades.count(),
-            'fee': fee,
-            'balance': fee.balance if fee else 0,
-        })
+    # Get school profile
+    school_profile = SchoolProfile.objects.first()
     
     context = {
-        'students': students,  # HII TA YARI INAPO
-        'teachers': teachers,  # HII TA YARI INAPO
-        'buses': buses,  # HII TA YARI INAPO
-        'classes': classes,  # HII TA YARI INAPO
-        # ONGEZA HIZI MPYA
+        'students': students,
+        'teachers': teachers,
+        'buses': buses,
+        'classes': classes,
         'filtered_students': filtered_students,
-        'student_reports': student_reports,
         'selected_class_id': selected_class_id,
         'selected_term': selected_term,
         'terms': AcademicTerm.objects.all(),
@@ -147,40 +128,9 @@ def headmaster_dashboard(request):
         'total_teachers': teachers.count(),
         'total_buses': buses.count(),
         'total_classes': classes.count(),
+        'school_profile': school_profile,
     }
     return render(request, 'headmaster/dashboard.html', context)
-
-@login_required
-def academic_history(request, student_id):
-    from django.shortcuts import render, get_object_or_404
-    from .models import Student, Grade, AcademicTerm, Fee
-    
-    student = get_object_or_404(Student, id=student_id)
-    grades = Grade.objects.filter(student=student)
-    terms = AcademicTerm.objects.all().order_by('-year', 'name')
-    
-    term_grades = {}
-    for term in terms:
-        term_grades[term] = Grade.objects.filter(student=student, term=term)
-    
-    fees = Fee.objects.filter(student=student)
-    
-    total_score = sum([g.score for g in grades]) if grades else 0
-    total_subjects = grades.count()
-    average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
-    
-    context = {
-        'student': student,
-        'grades': grades,
-        'terms': terms,
-        'term_grades': term_grades,
-        'fees': fees,
-        'total_subjects': total_subjects,
-        'total_score': total_score,
-        'average': average,
-    }
-    
-    return render(request, 'headmaster/academic_history.html', context)
 
 @login_required
 def headmaster_students(request):
