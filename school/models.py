@@ -12,6 +12,8 @@ class SchoolProfile(models.Model):
     bank_account = models.CharField(max_length=50)
     logo = models.ImageField(upload_to='school/', blank=True, null=True)
     principal_signature = models.ImageField(upload_to='signatures/', blank=True, null=True)
+    opening_date = models.DateField(blank=True, null=True)
+    closing_date = models.DateField(blank=True, null=True)
     
     def __str__(self):
         return self.school_name
