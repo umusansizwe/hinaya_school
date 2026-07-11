@@ -91,20 +91,18 @@
         <div class="card">
             <div class="card-body">
                 <!-- School Header -->
-                <div class="school-header">
-                    {% if school_profile and school_profile.logo %}
-                        <img src="{{ school_profile.logo.url }}" alt="School Logo" class="school-logo" style="max-height:80px; margin-bottom:10px;">
-                    {% else %}
-                        <div style="font-size: 50px;">🏫</div>
-                    {% endif %}
-                    <h3 class="school-name">{{ school_profile.school_name|default:"HINAYA PRE AND PRIMARY SCHOOL" }}</h3>
-                    <p class="school-address">
-                        {% if school_profile %}
-                            {{ school_profile.address|default:"" }}<br>
-                            Phone: {{ school_profile.phone|default:"" }} | Email: {{ school_profile.email|default:"" }}
-                        {% endif %}
-                    </p>
-                </div>
+                {% load static %}
+<!-- School Header -->
+<div class="school-header text-center">
+    <img src="{% static 'images/logo.png' %}" alt="School Logo" style="max-height:80px; margin-bottom:10px;">
+    <h3 class="school-name">{{ school_profile.school_name|default:"HINAYA PRE AND PRIMARY SCHOOL" }}</h3>
+    <p class="school-address">
+        {% if school_profile %}
+            {{ school_profile.address|default:"" }}<br>
+            Phone: {{ school_profile.phone|default:"" }} | Email: {{ school_profile.email|default:"" }}
+        {% endif %}
+    </p>
+</div>
                 
                 <!-- Report Title -->
                 <div class="report-title">
