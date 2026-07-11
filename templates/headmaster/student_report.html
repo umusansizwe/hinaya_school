@@ -93,7 +93,7 @@
                 <!-- School Header -->
                 <div class="school-header">
                     {% if school_profile and school_profile.logo %}
-                        <img src="{{ school_profile.logo.url }}" alt="School Logo" class="school-logo">
+                        <img src="{{ school_profile.logo.url }}" alt="School Logo" class="school-logo" style="max-height:80px; margin-bottom:10px;">
                     {% else %}
                         <div style="font-size: 50px;">🏫</div>
                     {% endif %}
