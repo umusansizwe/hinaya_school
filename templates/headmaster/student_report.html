@@ -91,10 +91,16 @@
         <div class="card">
             <div class="card-body">
                 <!-- School Header -->
-                {% load static %}
-<!-- School Header -->
+               <!-- School Header -->
 <div class="school-header text-center">
-    <img src="{% static 'images/logo.png' %}" alt="School Logo" style="max-height:80px; margin-bottom:10px;">
+    {% if school_profile and school_profile.logo %}
+        <img src="{{ school_profile.logo.url }}" alt="School Logo" style="max-height:80px; margin-bottom:10px;">
+    {% else %}
+        <!-- Ikiwa hakuna logo, onyesha herufi H -->
+        <div style="width:80px;height:80px;border-radius:50%;background:#2c3e50;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:40px;font-weight:bold;color:white;">
+            H
+        </div>
+    {% endif %}
     <h3 class="school-name">{{ school_profile.school_name|default:"HINAYA PRE AND PRIMARY SCHOOL" }}</h3>
     <p class="school-address">
         {% if school_profile %}

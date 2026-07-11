@@ -7,8 +7,6 @@ urlpatterns = [
     path('', views.login_view, name='login'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('logout/', views.logout_view, name='logout'),
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     
     # Headmaster URLs
     path('headmaster/', views.headmaster_dashboard, name='headmaster_dashboard'),
