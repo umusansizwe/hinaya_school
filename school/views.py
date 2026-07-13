@@ -7,6 +7,7 @@ from django.http import HttpResponse
 from django.contrib.auth.models import User, Group
 from .models import *
 import traceback
+from django.shortcuts import get_object_or_404
 
 # ========== LOGIN & LOGOUT ==========
 
@@ -125,78 +126,46 @@ def headmaster_buses(request):
     return render(request, 'headmaster/buses.html', {'buses': buses})
 
 # ========== STUDENT REPORT ==========
-
 @login_required
 def view_student_report(request, student_id):
     try:
+        from .models import Student
         student = get_object_or_404(Student, id=student_id)
-        grades = Grade.objects.filter(student=student)
-        fees = Fee.objects.filter(student=student)
-        school_profile = SchoolProfile.objects.first()
-        
-        total_score = 0
-        for grade in grades:
-            total_score += grade.score
-        
-        total_subjects = grades.count()
-        if total_subjects > 0:
-            average = round(total_score / total_subjects, 2)
-        else:
-            average = 0
-        
-        context = {
-            'student': student,
-            'grades': grades,
-            'fees': fees,
-            'school_profile': school_profile,
-            'total_score': total_score,
-            'total_subjects': total_subjects,
-            'average': average,
-        }
-        return render(request, 'headmaster/student_report.html', context)
-    
+        return HttpResponse(f"""
+        <html>
+        <head><title>Student Report</title></head>
+        <body>
+            <h1>✅ Student Report Working!</h1>
+            <p><strong>Name:</strong> {student.first_name} {student.last_name}</p>
+            <p><strong>Class:</strong> {student.current_class}</p>
+            <p><strong>Parent:</strong> {student.parent_name}</p>
+            <p><a href="/headmaster/students/">← Back to Students</a></p>
+        </body>
+        </html>
+        """)
     except Exception as e:
-        return HttpResponse(f"<h1>Error</h1><pre>{traceback.format_exc()}</pre>")
+        return HttpResponse(f"<h1>❌ ERROR</h1><pre>{traceback.format_exc()}</pre>")
 
 # ========== ACADEMIC HISTORY ==========
-
 @login_required
 def academic_history(request, student_id):
     try:
+        from .models import Student
         student = get_object_or_404(Student, id=student_id)
-        grades = Grade.objects.filter(student=student)
-        terms = AcademicTerm.objects.all().order_by('-year', 'name')
-        
-        term_grades = {}
-        for term in terms:
-            term_grades[term] = Grade.objects.filter(student=student, term=term)
-        
-        fees = Fee.objects.filter(student=student)
-        
-        total_score = 0
-        for grade in grades:
-            total_score += grade.score
-        
-        total_subjects = grades.count()
-        if total_subjects > 0:
-            average = round(total_score / total_subjects, 2)
-        else:
-            average = 0
-        
-        context = {
-            'student': student,
-            'grades': grades,
-            'terms': terms,
-            'term_grades': term_grades,
-            'fees': fees,
-            'total_subjects': total_subjects,
-            'total_score': total_score,
-            'average': average,
-        }
-        return render(request, 'headmaster/academic_history.html', context)
-    
+        return HttpResponse(f"""
+        <html>
+        <head><title>Academic History</title></head>
+        <body>
+            <h1>✅ Academic History Working!</h1>
+            <p><strong>Name:</strong> {student.first_name} {student.last_name}</p>
+            <p><strong>Class:</strong> {student.current_class}</p>
+            <p><strong>Parent:</strong> {student.parent_name}</p>
+            <p><a href="/headmaster/students/">← Back to Students</a></p>
+        </body>
+        </html>
+        """)
     except Exception as e:
-        return HttpResponse(f"<h1>Error</h1><pre>{traceback.format_exc()}</pre>")
+        return HttpResponse(f"<h1>❌ ERROR</h1><pre>{traceback.format_exc()}</pre>")
 
 # ========== ADD / DELETE STUDENT ==========
 
