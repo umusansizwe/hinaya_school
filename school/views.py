@@ -615,3 +615,30 @@ def view_student_report(request, student_id):
             'error': str(e),
             'student': None
         })
+@login_required
+def academic_history(request, student_id):
+    student = get_object_or_404(Student, id=student_id)
+    grades = Grade.objects.filter(student=student)
+    terms = AcademicTerm.objects.all().order_by('-year', 'name')
+    
+    term_grades = {}
+    for term in terms:
+        term_grades[term] = Grade.objects.filter(student=student, term=term)
+    
+    fees = Fee.objects.filter(student=student)
+    
+    total_score = sum([g.score for g in grades]) if grades else 0
+    total_subjects = grades.count()
+    average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
+    
+    context = {
+        'student': student,
+        'grades': grades,
+        'terms': terms,
+        'term_grades': term_grades,
+        'fees': fees,
+        'total_subjects': total_subjects,
+        'total_score': total_score,
+        'average': average,
+    }
+    return render(request, 'headmaster/academic_history.html', context)

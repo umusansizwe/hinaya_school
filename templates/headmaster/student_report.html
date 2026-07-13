@@ -94,7 +94,7 @@
                <!-- School Header -->
 <div class="school-header text-center">
     {% if school_profile and school_profile.logo %}
-        <img src="{{ school_profile.logo.url }}" alt="School Logo" style="max-height:80px; margin-bottom:10px;">
+        <img src="{% static 'images/logo.png' %}" alt="School Logo" style="max-height:80px; margin-bottom:10px;">
     {% else %}
         <!-- Ikiwa hakuna logo, onyesha herufi H -->
         <div style="width:80px;height:80px;border-radius:50%;background:#2c3e50;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:40px;font-weight:bold;color:white;">
@@ -300,7 +300,7 @@
                         {% if school_profile and school_profile.principal_signature %}
                             <img src="{{ school_profile.principal_signature.url }}" alt="Signature" class="signature-img">
                         {% else %}
-                            <p>___________________</p>
+                            <p>A.Kijaji</p>
                         {% endif %}
                         <p>
                             {% if school_profile %}
