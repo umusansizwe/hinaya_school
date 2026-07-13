@@ -1,10 +1,12 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Sum
+from django.http import HttpResponse
+from django.contrib.auth.models import User, Group
 from .models import *
-from django.shortcuts import render, get_object_or_404
-from .models import Student, Grade, Fee, SchoolProfile
+import traceback
 
 # ========== LOGIN & LOGOUT ==========
 
@@ -20,7 +22,6 @@ def login_view(request):
             login(request, user)
             messages.success(request, f'Welcome {username}!')
             
-            # Elekeza kulingana na role
             if user.groups.filter(name='Headmaster').exists():
                 return redirect('headmaster_dashboard')
             elif user.groups.filter(name='Accountant').exists():
@@ -48,32 +49,21 @@ def logout_view(request):
 def dashboard(request):
     user = request.user
     
-    # Angalia kama user ni Headmaster
     if user.groups.filter(name='Headmaster').exists():
         return redirect('headmaster_dashboard')
-    
-    # Angalia kama user ni Accountant
     elif user.groups.filter(name='Accountant').exists():
         return redirect('accountant_dashboard')
-    
-    # Angalia kama user ni Teacher
     elif user.groups.filter(name='Teacher').exists():
         return redirect('teacher_dashboard')
-    
-    # Angalia kama user ni Parent
     elif user.groups.filter(name='Parent').exists():
         return redirect('parent_dashboard')
-    
-    # Kama ni admin (superuser)
     elif user.is_superuser:
         return redirect('admin_dashboard')
-    
-    # Kama hakuna role
     else:
         messages.error(request, 'No role assigned to your account.')
         return redirect('login')
 
-# ========== HEADMASTER FEATURES ==========
+# ========== HEADMASTER DASHBOARD ==========
 
 @login_required
 def headmaster_dashboard(request):
@@ -82,39 +72,18 @@ def headmaster_dashboard(request):
     buses = SchoolBus.objects.all()
     classes = Class.objects.all()
     
-    context = {
-        'students': students,
-        'teachers': teachers,
-        'buses': buses,
-        'classes': classes,
-        'total_students': students.count(),
-        'total_teachers': teachers.count(),
-        'total_buses': buses.count(),
-        'total_classes': classes.count(),
-    }
-    return render(request, 'headmaster/dashboard.html', context)
-@login_required
-def headmaster_dashboard(request):
-    students = Student.objects.all()
-    teachers = Teacher.objects.all()
-    buses = SchoolBus.objects.all()
-    classes = Class.objects.all()
-    
-    # Filter students by class
     selected_class_id = request.GET.get('class_id')
     if selected_class_id:
         filtered_students = Student.objects.filter(current_class_id=selected_class_id, is_active=True)
     else:
         filtered_students = students.filter(is_active=True)
     
-    # Get selected term
     selected_term_id = request.GET.get('term_id')
     if selected_term_id:
         selected_term = AcademicTerm.objects.filter(id=selected_term_id).first()
     else:
         selected_term = AcademicTerm.objects.filter(is_active=True).first()
     
-    # Get school profile
     school_profile = SchoolProfile.objects.first()
     
     context = {
@@ -133,6 +102,7 @@ def headmaster_dashboard(request):
         'school_profile': school_profile,
     }
     return render(request, 'headmaster/dashboard.html', context)
+
 @login_required
 def headmaster_students(request):
     students = Student.objects.filter(is_active=True)
@@ -145,11 +115,6 @@ def headmaster_students(request):
     return render(request, 'headmaster/students.html', context)
 
 @login_required
-def headmaster_students(request):
-    students = Student.objects.all()
-    return render(request, 'headmaster/students.html', {'students': students})
-
-@login_required
 def headmaster_teachers(request):
     teachers = Teacher.objects.all()
     return render(request, 'headmaster/teachers.html', {'teachers': teachers})
@@ -158,7 +123,82 @@ def headmaster_teachers(request):
 def headmaster_buses(request):
     buses = SchoolBus.objects.all()
     return render(request, 'headmaster/buses.html', {'buses': buses})
-# ========== ADD STUDENT ==========
+
+# ========== STUDENT REPORT ==========
+
+@login_required
+def view_student_report(request, student_id):
+    try:
+        student = get_object_or_404(Student, id=student_id)
+        grades = Grade.objects.filter(student=student)
+        fees = Fee.objects.filter(student=student)
+        school_profile = SchoolProfile.objects.first()
+        
+        total_score = 0
+        for grade in grades:
+            total_score += grade.score
+        
+        total_subjects = grades.count()
+        if total_subjects > 0:
+            average = round(total_score / total_subjects, 2)
+        else:
+            average = 0
+        
+        context = {
+            'student': student,
+            'grades': grades,
+            'fees': fees,
+            'school_profile': school_profile,
+            'total_score': total_score,
+            'total_subjects': total_subjects,
+            'average': average,
+        }
+        return render(request, 'headmaster/student_report.html', context)
+    
+    except Exception as e:
+        return HttpResponse(f"<h1>Error</h1><pre>{traceback.format_exc()}</pre>")
+
+# ========== ACADEMIC HISTORY ==========
+
+@login_required
+def academic_history(request, student_id):
+    try:
+        student = get_object_or_404(Student, id=student_id)
+        grades = Grade.objects.filter(student=student)
+        terms = AcademicTerm.objects.all().order_by('-year', 'name')
+        
+        term_grades = {}
+        for term in terms:
+            term_grades[term] = Grade.objects.filter(student=student, term=term)
+        
+        fees = Fee.objects.filter(student=student)
+        
+        total_score = 0
+        for grade in grades:
+            total_score += grade.score
+        
+        total_subjects = grades.count()
+        if total_subjects > 0:
+            average = round(total_score / total_subjects, 2)
+        else:
+            average = 0
+        
+        context = {
+            'student': student,
+            'grades': grades,
+            'terms': terms,
+            'term_grades': term_grades,
+            'fees': fees,
+            'total_subjects': total_subjects,
+            'total_score': total_score,
+            'average': average,
+        }
+        return render(request, 'headmaster/academic_history.html', context)
+    
+    except Exception as e:
+        return HttpResponse(f"<h1>Error</h1><pre>{traceback.format_exc()}</pre>")
+
+# ========== ADD / DELETE STUDENT ==========
 
 @login_required
 def add_student(request):
@@ -173,7 +213,6 @@ def add_student(request):
         address = request.POST.get('address')
         class_id = request.POST.get('current_class')
         
-        # Unda mwanafunzi
         student = Student.objects.create(
             first_name=first_name,
             last_name=last_name,
@@ -186,39 +225,15 @@ def add_student(request):
             current_class_id=class_id
         )
         
-        # Ikiwa parent_email ipo, unda user na group ya Parent
-        if parent_email:
-            from django.contrib.auth.models import Group, User
-            # Hakikisha user haijawahi kuundwa
-            if not User.objects.filter(email=parent_email).exists():
-                # Unda username kutoka email
-                username = parent_email.split('@')[0]
-                # Hakikisha username ni unique
-                if User.objects.filter(username=username).exists():
-                    username = f"{username}_{student.id}"
-                
-                # Unda user
-                user = User.objects.create_user(
-                    username=username,
-                    password='parent123',  # Default password
-                    email=parent_email,
-                    first_name=parent_name
-                )
-                # Weka group ya Parent
-                parent_group, created = Group.objects.get_or_create(name='Parent')
-                user.groups.add(parent_group)
-        
         messages.success(request, f'Student {first_name} {last_name} added successfully!')
         return redirect('headmaster_dashboard')
     
     classes = Class.objects.all()
     return render(request, 'headmaster/add_student.html', {'classes': classes})
 
-# ========== DELETE STUDENT ==========
-
 @login_required
 def delete_student(request, student_id):
-    student = Student.objects.get(id=student_id)
+    student = get_object_or_404(Student, id=student_id)
     if request.method == 'POST':
         name = f"{student.first_name} {student.last_name}"
         student.delete()
@@ -226,6 +241,7 @@ def delete_student(request, student_id):
         return redirect('headmaster_students')
     
     return render(request, 'headmaster/delete_student.html', {'student': student})
+
 # ========== PROMOTE STUDENTS ==========
 
 @login_required
@@ -250,7 +266,9 @@ def promote_students(request):
     
     classes = Class.objects.all()
     return render(request, 'headmaster/promote_students.html', {'classes': classes})
-# ========== ADD TEACHER ==========
+
+# ========== ADD / DELETE TEACHER ==========
+
 @login_required
 def add_teacher(request):
     if request.method == 'POST':
@@ -262,14 +280,12 @@ def add_teacher(request):
         phone = request.POST.get('phone')
         gender = request.POST.get('gender')
         subject_ids = request.POST.getlist('subjects')
-        assigned_class_ids = request.POST.getlist('assigned_classes')  # Badilisha kuwa list
+        assigned_class_id = request.POST.get('assigned_class')
         
-        # Hakikisha username haijatumika
         if User.objects.filter(username=username).exists():
             messages.error(request, 'Username already exists!')
             return redirect('add_teacher')
         
-        # Unda User
         user = User.objects.create_user(
             username=username,
             password=password,
@@ -278,26 +294,18 @@ def add_teacher(request):
             email=email
         )
         
-        # Weka Group ya Teacher
         teacher_group, created = Group.objects.get_or_create(name='Teacher')
         user.groups.add(teacher_group)
         
-        # Unda Teacher (bila assigned_class kwa sasa)
         teacher = Teacher.objects.create(
             user=user,
             phone=phone,
-            gender=gender
+            gender=gender,
+            assigned_class_id=assigned_class_id if assigned_class_id else None
         )
         
-        # Ongeza Subjects
         if subject_ids:
             teacher.subjects.set(subject_ids)
-        
-        # Ongeza madarasa mengi
-        if assigned_class_ids:
-            for class_id in assigned_class_ids:
-                class_obj = Class.objects.get(id=class_id)
-                teacher.assigned_classes.add(class_obj)
         
         messages.success(request, f'Teacher {first_name} {last_name} added successfully!')
         return redirect('headmaster_teachers')
@@ -312,19 +320,19 @@ def add_teacher(request):
         'terms': terms,
     }
     return render(request, 'headmaster/add_teacher.html', context)
-# ========== DELETE TEACHER ==========
 
 @login_required
 def delete_teacher(request, teacher_id):
-    teacher = Teacher.objects.get(id=teacher_id)
+    teacher = get_object_or_404(Teacher, id=teacher_id)
     if request.method == 'POST':
         name = f"{teacher.user.first_name} {teacher.user.last_name}"
-        teacher.user.delete()  # Hii inafuta user na teacher
+        teacher.user.delete()
         messages.success(request, f'Teacher {name} deleted successfully!')
         return redirect('headmaster_teachers')
     
     return render(request, 'headmaster/delete_teacher.html', {'teacher': teacher})
-# ========== ADD BUS ==========
+
+# ========== ADD / DELETE BUS ==========
 
 @login_required
 def add_bus(request):
@@ -347,11 +355,10 @@ def add_bus(request):
         return redirect('headmaster_buses')
     
     return render(request, 'headmaster/add_bus.html')
-# ========== DELETE BUS ==========
 
 @login_required
 def delete_bus(request, bus_id):
-    bus = SchoolBus.objects.get(id=bus_id)
+    bus = get_object_or_404(SchoolBus, id=bus_id)
     if request.method == 'POST':
         bus_number = bus.bus_number
         bus.delete()
@@ -359,21 +366,15 @@ def delete_bus(request, bus_id):
         return redirect('headmaster_buses')
     
     return render(request, 'headmaster/delete_bus.html', {'bus': bus})
-# ========== ACCOUNTANT FEATURES ==========
+
+# ========== ACCOUNTANT DASHBOARD ==========
 
 @login_required
 def accountant_dashboard(request):
-    # Wanafunzi wote
     all_students = Student.objects.all()
-    
-    # Wanafunzi wenye deni
     debtors = Fee.objects.filter(balance__gt=0).select_related('student')
-    
-    # Waliomaliza deni
     completed = Fee.objects.filter(is_completed=True).select_related('student')
-    
-    # Jumla ya deni
-    total_debt = Fee.objects.aggregate(total=models.Sum('balance'))['total'] or 0
+    total_debt = Fee.objects.aggregate(total=Sum('balance'))['total'] or 0
     
     context = {
         'all_students': all_students,
@@ -392,7 +393,7 @@ def add_payment(request):
         amount = request.POST.get('amount')
         
         try:
-            fee = Fee.objects.get(id=fee_id)
+            fee = get_object_or_404(Fee, id=fee_id)
             amount = float(amount)
             
             if amount > 0:
@@ -401,19 +402,20 @@ def add_payment(request):
                 messages.success(request, f'Payment of {amount} added successfully!')
             else:
                 messages.error(request, 'Amount must be greater than zero.')
-        except (ValueError, Fee.DoesNotExist):
-            messages.error(request, 'Invalid input.')
+        except (ValueError, TypeError):
+            messages.error(request, 'Invalid amount.')
         
         return redirect('accountant_dashboard')
     
     fees = Fee.objects.filter(balance__gt=0).select_related('student', 'term')
     return render(request, 'accountant/add_payment.html', {'fees': fees})
-# ========== TEACHER FEATURES ==========
+
+# ========== TEACHER DASHBOARD ==========
+
 @login_required
 def teacher_dashboard(request):
     try:
         teacher = Teacher.objects.get(user=request.user)
-        # Pata wanafunzi wa madarasa yote ya mwalimu
         students = Student.objects.filter(current_class__in=teacher.assigned_classes.all(), is_active=True)
         subjects = teacher.subjects.all()
         
@@ -468,18 +470,12 @@ def add_marks(request):
                 messages.success(request, f'Marks for {student.first_name} {student.last_name} added successfully!')
             else:
                 messages.error(request, 'Score must be between 0 and 100.')
-        except Student.DoesNotExist:
-            messages.error(request, 'Student not found.')
-        except Subject.DoesNotExist:
-            messages.error(request, 'Subject not found.')
-        except Term.DoesNotExist:
-            messages.error(request, 'Term not found.')
         except (ValueError, TypeError):
             messages.error(request, 'Invalid score value.')
         
         return redirect('teacher_dashboard')
     
-    students = Student.objects.filter(current_class=teacher.assigned_class)
+    students = Student.objects.filter(current_class__in=teacher.assigned_classes.all())
     subjects = teacher.subjects.all()
     terms = AcademicTerm.objects.filter(is_active=True)
     
@@ -490,11 +486,11 @@ def add_marks(request):
         'teacher': teacher,
     }
     return render(request, 'teacher/add_marks.html', context)
-# ========== PARENT FEATURES ==========
+
+# ========== PARENT DASHBOARD ==========
 
 @login_required
 def parent_dashboard(request):
-    # Tafuta mwanafunzi ambaye email ya mzazi inalingana na user email
     try:
         student = Student.objects.get(parent_email=request.user.email)
         grades = Grade.objects.filter(student=student)
@@ -512,7 +508,7 @@ def parent_dashboard(request):
         }
         return render(request, 'parent/dashboard.html', context)
     except Student.DoesNotExist:
-        messages.error(request, 'No student linked to your email. Please contact school.')
+        messages.error(request, 'No student linked to your email.')
         return render(request, 'parent/dashboard.html', {'error': 'No student found'})
 
 @login_required
@@ -540,7 +536,8 @@ def send_message(request):
         return redirect('parent_dashboard')
     
     return render(request, 'parent/send_message.html', {'student': student})
-# ========== ADMIN FEATURES ==========
+
+# ========== ADMIN DASHBOARD ==========
 
 @login_required
 def admin_dashboard(request):
@@ -582,89 +579,3 @@ def update_school_profile(request):
         return redirect('admin_dashboard')
     
     return render(request, 'admin/update_profile.html', {'profile': profile})
-
-@login_required
-def view_student_report(request, student_id):
-    try:
-        student = get_object_or_404(Student, id=student_id)
-        grades = Grade.objects.filter(student=student)
-        fees = Fee.objects.filter(student=student)
-        school_profile = SchoolProfile.objects.first()
-        
-        # Hesabu total na average
-        total_score = 0
-        for grade in grades:
-            total_score += grade.score
-        
-        total_subjects = grades.count()
-        if total_subjects > 0:
-            average = round(total_score / total_subjects, 2)
-        else:
-            average = 0
-        
-        context = {
-            'student': student,
-            'grades': grades,
-            'fees': fees,
-            'school_profile': school_profile,
-            'total_score': total_score,
-            'total_subjects': total_subjects,
-            'average': average,
-        }
-        return render(request, 'headmaster/student_report.html', context)
-    
-    except Exception as e:
-        # Onyesha kosa kwenye ukurasa
-        return render(request, 'headmaster/student_report.html', {
-            'error': str(e),
-            'student': None,
-            'grades': [],
-            'fees': [],
-            'school_profile': None,
-            'total_score': 0,
-            'total_subjects': 0,
-            'average': 0,
-        })
-
-@login_required
-def academic_history(request, student_id):
-    from .models import Student, Grade, AcademicTerm, Fee
-    
-    try:
-        student = get_object_or_404(Student, id=student_id)
-        grades = Grade.objects.filter(student=student)
-        terms = AcademicTerm.objects.all().order_by('-year', 'name')
-        
-        term_grades = {}
-        for term in terms:
-            term_grades[term] = Grade.objects.filter(student=student, term=term)
-        
-        fees = Fee.objects.filter(student=student)
-        
-        total_score = 0
-        for grade in grades:
-            total_score += grade.score
-        
-        total_subjects = grades.count()
-        if total_subjects > 0:
-            average = round(total_score / total_subjects, 2)
-        else:
-            average = 0
-        
-        context = {
-            'student': student,
-            'grades': grades,
-            'terms': terms,
-            'term_grades': term_grades,
-            'fees': fees,
-            'total_subjects': total_subjects,
-            'total_score': total_score,
-            'average': average,
-        }
-        return render(request, 'headmaster/academic_history.html', context)
-    
-    except Exception as e:
-        return render(request, 'headmaster/academic_history.html', {
-            'error': str(e),
-            'student': None,
-        })
