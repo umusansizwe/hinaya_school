@@ -3,6 +3,8 @@ from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .models import *
+from django.shortcuts import render, get_object_or_404
+from .models import Student, Grade, Fee, SchoolProfile
 
 # ========== LOGIN & LOGOUT ==========
 
@@ -589,6 +591,7 @@ def view_student_report(request, student_id):
         fees = Fee.objects.filter(student=student)
         school_profile = SchoolProfile.objects.first()
         
+        # Hesabu total na average
         total_score = 0
         for grade in grades:
             total_score += grade.score
@@ -611,34 +614,57 @@ def view_student_report(request, student_id):
         return render(request, 'headmaster/student_report.html', context)
     
     except Exception as e:
+        # Onyesha kosa kwenye ukurasa
         return render(request, 'headmaster/student_report.html', {
             'error': str(e),
-            'student': None
+            'student': None,
+            'grades': [],
+            'fees': [],
+            'school_profile': None,
+            'total_score': 0,
+            'total_subjects': 0,
+            'average': 0,
         })
+
 @login_required
 def academic_history(request, student_id):
-    student = get_object_or_404(Student, id=student_id)
-    grades = Grade.objects.filter(student=student)
-    terms = AcademicTerm.objects.all().order_by('-year', 'name')
+    from .models import Student, Grade, AcademicTerm, Fee
     
-    term_grades = {}
-    for term in terms:
-        term_grades[term] = Grade.objects.filter(student=student, term=term)
+    try:
+        student = get_object_or_404(Student, id=student_id)
+        grades = Grade.objects.filter(student=student)
+        terms = AcademicTerm.objects.all().order_by('-year', 'name')
+        
+        term_grades = {}
+        for term in terms:
+            term_grades[term] = Grade.objects.filter(student=student, term=term)
+        
+        fees = Fee.objects.filter(student=student)
+        
+        total_score = 0
+        for grade in grades:
+            total_score += grade.score
+        
+        total_subjects = grades.count()
+        if total_subjects > 0:
+            average = round(total_score / total_subjects, 2)
+        else:
+            average = 0
+        
+        context = {
+            'student': student,
+            'grades': grades,
+            'terms': terms,
+            'term_grades': term_grades,
+            'fees': fees,
+            'total_subjects': total_subjects,
+            'total_score': total_score,
+            'average': average,
+        }
+        return render(request, 'headmaster/academic_history.html', context)
     
-    fees = Fee.objects.filter(student=student)
-    
-    total_score = sum([g.score for g in grades]) if grades else 0
-    total_subjects = grades.count()
-    average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
-    
-    context = {
-        'student': student,
-        'grades': grades,
-        'terms': terms,
-        'term_grades': term_grades,
-        'fees': fees,
-        'total_subjects': total_subjects,
-        'total_score': total_score,
-        'average': average,
-    }
-    return render(request, 'headmaster/academic_history.html', context)
+    except Exception as e:
+        return render(request, 'headmaster/academic_history.html', {
+            'error': str(e),
+            'student': None,
+        })
