@@ -368,9 +368,26 @@ def delete_bus(request, bus_id):
 
 @login_required
 def accountant_dashboard(request):
-    all_students = Student.objects.all()
+    # Wanafunzi wote
+    all_students = Student.objects.filter(is_active=True)
+    
+    # Unda fee record kwa kila mwanafunzi ikiwa haipo
+    active_term = AcademicTerm.objects.filter(is_active=True).first()
+    if active_term:
+        for student in all_students:
+            Fee.objects.get_or_create(
+                student=student,
+                term=active_term,
+                defaults={'total_fee': 0, 'amount_paid': 0}
+            )
+    
+    # Wanafunzi wenye deni
     debtors = Fee.objects.filter(balance__gt=0).select_related('student')
+    
+    # Waliomaliza deni
     completed = Fee.objects.filter(is_completed=True).select_related('student')
+    
+    # Jumla ya deni
     total_debt = Fee.objects.aggregate(total=Sum('balance'))['total'] or 0
     
     context = {
@@ -380,6 +397,7 @@ def accountant_dashboard(request):
         'total_debt': total_debt,
         'debtor_count': debtors.count(),
         'completed_count': completed.count(),
+        'active_term': active_term,
     }
     return render(request, 'accountant/dashboard.html', context)
 
@@ -397,13 +415,12 @@ def add_payment(request):
                 fee.amount_paid += amount
                 fee.save()
                 
-                # Kama balance ni 0 au chini, inahesabiwa kuwa imelipwa
                 if fee.balance <= 0:
                     fee.is_completed = True
                     fee.save()
                     messages.success(request, f'✅ Payment complete! {fee.student.first_name} has cleared the debt!')
                 else:
-                    messages.success(request, f'✅ Payment of {amount} added successfully! Remaining balance: {fee.balance}')
+                    messages.success(request, f'✅ Payment of {amount} added! Remaining balance: {fee.balance}')
             else:
                 messages.error(request, 'Amount must be greater than zero.')
         except (ValueError, TypeError):
@@ -411,9 +428,7 @@ def add_payment(request):
         
         return redirect('accountant_dashboard')
     
-    # Onyesha wanafunzi wenye deni pekee
-    fees = Fee.objects.filter(balance__gt=0).select_related('student', 'term')
-    return render(request, 'accountant/add_payment.html', {'fees': fees})
+    return redirect('accountant_dashboard')
 
 # ========== TEACHER DASHBOARD ==========
 
