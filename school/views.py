@@ -396,7 +396,14 @@ def add_payment(request):
             if amount > 0:
                 fee.amount_paid += amount
                 fee.save()
-                messages.success(request, f'Payment of {amount} added successfully!')
+                
+                # Kama balance ni 0 au chini, inahesabiwa kuwa imelipwa
+                if fee.balance <= 0:
+                    fee.is_completed = True
+                    fee.save()
+                    messages.success(request, f'✅ Payment complete! {fee.student.first_name} has cleared the debt!')
+                else:
+                    messages.success(request, f'✅ Payment of {amount} added successfully! Remaining balance: {fee.balance}')
             else:
                 messages.error(request, 'Amount must be greater than zero.')
         except (ValueError, TypeError):
@@ -404,6 +411,7 @@ def add_payment(request):
         
         return redirect('accountant_dashboard')
     
+    # Onyesha wanafunzi wenye deni pekee
     fees = Fee.objects.filter(balance__gt=0).select_related('student', 'term')
     return render(request, 'accountant/add_payment.html', {'fees': fees})
 

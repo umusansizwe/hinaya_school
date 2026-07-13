@@ -5,7 +5,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <style>
-        body { background: #f5f5f5; }
+        body { background: #f0f2f5; }
         .sidebar {
             min-height: 100vh;
             background: #2c3e50;
@@ -36,6 +36,8 @@
         .stat-card p { color: #7f8c8d; }
         .debt { color: #e74c3c; }
         .paid { color: #27ae60; }
+        .btn-add { background: #27ae60; color: white; }
+        .btn-add:hover { background: #2ecc71; color: white; }
     </style>
 </head>
 <body>
@@ -62,73 +64,109 @@
                 <h2><i class="bi bi-cash-stack"></i> Accountant Dashboard</h2>
                 <p>Welcome, {{ user.first_name }} {{ user.last_name }}</p>
                 
+                <!-- Stats -->
                 <div class="row mt-4">
                     <div class="col-md-4">
                         <div class="stat-card">
-                            <div class="debt"><i class="bi bi-exclamation-triangle"></i></div>
+                            <div class="debt"><i class="bi bi-exclamation-triangle" style="font-size:2rem;"></i></div>
                             <h2>{{ debtor_count }}</h2>
                             <p>Students with Debt</p>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="stat-card">
-                            <div class="paid"><i class="bi bi-check-circle"></i></div>
+                            <div class="paid"><i class="bi bi-check-circle" style="font-size:2rem;"></i></div>
                             <h2>{{ completed_count }}</h2>
                             <p>Students Completed</p>
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="stat-card">
-                            <div class="debt"><i class="bi bi-currency-dollar"></i></div>
+                            <div class="debt"><i class="bi bi-currency-dollar" style="font-size:2rem;"></i></div>
                             <h2>TSh {{ total_debt|floatformat:2 }}</h2>
                             <p>Total Debt</p>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Orodha ya Wanafunzi Wote -->
+                <!-- Debtors Table -->
                 <div class="mt-4">
                     <div class="card">
-                        <div class="card-header bg-primary text-white">
-                            <h5><i class="bi bi-people"></i> All Students</h5>
+                        <div class="card-header bg-danger text-white">
+                            <h5><i class="bi bi-exclamation-triangle"></i> Students with Debt</h5>
                         </div>
                         <div class="card-body">
-                            <table class="table table-bordered">
+                            <table class="table table-bordered table-striped">
                                 <thead>
                                     <tr>
                                         <th>#</th>
                                         <th>Student</th>
                                         <th>Class</th>
+                                        <th>Term</th>
                                         <th>Total Fee</th>
                                         <th>Paid</th>
                                         <th>Balance</th>
-                                        <th>Status</th>
+                                        <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for student in all_students %}
+                                    {% for fee in debtors %}
                                     <tr>
                                         <td>{{ forloop.counter }}</td>
-                                        <td>{{ student.first_name }} {{ student.last_name }}</td>
-                                        <td>{{ student.current_class }}</td>
-                                        {% with fee=student.fee_set.first %}
-                                            <td>{{ fee.total_fee|default:"0" }}</td>
-                                            <td>{{ fee.amount_paid|default:"0" }}</td>
-                                            <td class="{% if fee.balance > 0 %}text-danger{% else %}text-success{% endif %}">
-                                                {{ fee.balance|default:"0" }}
-                                            </td>
-                                            <td>
-                                                {% if fee.is_completed %}
-                                                    <span class="badge bg-success">Completed</span>
-                                                {% else %}
-                                                    <span class="badge bg-danger">Has Debt</span>
-                                                {% endif %}
-                                            </td>
-                                        {% endwith %}
+                                        <td>{{ fee.student.first_name }} {{ fee.student.last_name }}</td>
+                                        <td>{{ fee.student.current_class }}</td>
+                                        <td>{{ fee.term.name }} - {{ fee.term.year }}</td>
+                                        <td>{{ fee.total_fee|floatformat:2 }}</td>
+                                        <td>{{ fee.amount_paid|floatformat:2 }}</td>
+                                        <td class="text-danger">{{ fee.balance|floatformat:2 }}</td>
+                                        <td>
+                                            <a href="/accountant/add_payment/?student={{ fee.student.id }}" class="btn btn-success btn-sm">
+                                                <i class="bi bi-cash"></i> Add Payment
+                                            </a>
+                                        </td>
                                     </tr>
                                     {% empty %}
                                     <tr>
-                                        <td colspan="7" class="text-center">No students yet.</td>
+                                        <td colspan="8" class="text-center">🎉 All students have cleared their fees!</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Completed Table -->
+                <div class="mt-4">
+                    <div class="card">
+                        <div class="card-header bg-success text-white">
+                            <h5><i class="bi bi-check-circle"></i> Students Completed</h5>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Student</th>
+                                        <th>Class</th>
+                                        <th>Term</th>
+                                        <th>Total Fee</th>
+                                        <th>Paid</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for fee in completed %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ fee.student.first_name }} {{ fee.student.last_name }}</td>
+                                        <td>{{ fee.student.current_class }}</td>
+                                        <td>{{ fee.term.name }} - {{ fee.term.year }}</td>
+                                        <td>{{ fee.total_fee|floatformat:2 }}</td>
+                                        <td>{{ fee.amount_paid|floatformat:2 }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No students have completed payments yet.</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
