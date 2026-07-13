@@ -55,23 +55,15 @@
                                     <td>{{ student.parent_name }}</td>
                                     <td>{{ student.parent_phone }}</td>
                                     <td>
-                                        <a href="{% url 'view_student_report' student.id %}" class="btn btn-info btn-sm">
-                                            <i class="bi bi-eye"></i> View Report
-                                        </a>
-                                        <a href="/headmaster/delete_student/{{ student.id }}/" class="btn btn-danger btn-sm" onclick="return confirm('Delete this student?')">
-                                            <i class="bi bi-trash"></i> Delete
-                                        </a>
+                                        <a href="{% url 'view_student_report' student.id %}" class="btn btn-info btn-sm">View Report</a>
+                                        <a href="{% url 'academic_history' student.id %}" class="btn btn-warning btn-sm">History</a>
+                                        <a href="/headmaster/delete_student/{{ student.id }}/" class="btn btn-danger btn-sm" onclick="return confirm('Delete this student?')">Delete</a>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
                                     <td colspan="7" class="text-center">No students found.</td>
                                 </tr>
-                                <td>
-    <a href="{% url 'view_student_report' student.id %}" class="btn btn-info btn-sm">View Report</a>
-    <a href="{% url 'academic_history' student.id %}" class="btn btn-warning btn-sm">History</a>
-    <a href="/headmaster/delete_student/{{ student.id }}/" class="btn btn-danger btn-sm">Delete</a>
-</td>
                                 {% endfor %}
                             </tbody>
                         </table>
