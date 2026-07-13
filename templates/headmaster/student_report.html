@@ -1,328 +1,138 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Student Report - {{ student.first_name }} {{ student.last_name }}</title>
+    <title>Student Report</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <style>
-        .report-container { 
-            max-width: 900px; 
-            margin: 0 auto; 
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-        }
-        .school-header { 
-            border-bottom: 3px solid #2c3e50; 
-            padding-bottom: 15px; 
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .school-logo {
-            max-height: 80px;
-            margin-bottom: 10px;
-        }
-        .school-name {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin: 0;
-        }
-        .school-address {
-            color: #7f8c8d;
-            margin: 0;
-        }
-        .report-title {
-            background: #2c3e50;
-            color: white;
-            padding: 10px;
-            text-align: center;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-        .info-label {
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        .signature-img {
-            max-height: 60px;
-        }
-        .grade-A { color: #27ae60; font-weight: bold; }
-        .grade-B { color: #f39c12; font-weight: bold; }
-        .grade-C { color: #e67e22; font-weight: bold; }
-        .grade-D { color: #e74c3c; font-weight: bold; }
-        .grade-F { color: #c0392b; font-weight: bold; }
-        .school-dates {
-            background: #ecf0f1;
-            padding: 10px;
-            border-radius: 5px;
-            margin-top: 15px;
-            font-size: 14px;
-        }
-        .footer {
-            margin-top: 30px;
-            border-top: 1px solid #ddd;
-            padding-top: 15px;
-            text-align: center;
-            font-size: 12px;
-            color: #7f8c8d;
-        }
-        @media print {
-            .no-print { display: none !important; }
-            .report-container { box-shadow: none; padding: 10px; }
-            .btn { display: none !important; }
-        }
+        .report-container { max-width: 900px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
+        .school-header { border-bottom: 3px solid #2c3e50; padding-bottom: 15px; margin-bottom: 20px; text-align: center; }
+        .school-logo { max-height: 80px; margin-bottom: 10px; }
+        .school-name { font-size: 24px; font-weight: bold; color: #2c3e50; margin: 0; }
+        .report-title { background: #2c3e50; color: white; padding: 10px; text-align: center; border-radius: 5px; margin-bottom: 20px; }
+        .info-label { font-weight: bold; color: #2c3e50; }
+        .signature-img { max-height: 60px; }
+        @media print { .no-print { display: none !important; } .report-container { box-shadow: none; } }
     </style>
 </head>
 <body>
     <div class="container mt-4 report-container">
-        <!-- Back Button (Not visible in print) -->
+        <!-- Back Button -->
         <div class="no-print mb-3">
-            <a href="/headmaster/students/" class="btn btn-secondary">
-                <i class="bi bi-arrow-left"></i> Back to Students
-            </a>
-            <button class="btn btn-primary" onclick="window.print()">
-                <i class="bi bi-printer"></i> Print Report
-            </button>
+            <a href="/headmaster/students/" class="btn btn-secondary">← Back</a>
+            <button class="btn btn-primary" onclick="window.print()">🖨️ Print</button>
         </div>
         
-        <!-- Report Content -->
-        <div class="card">
-            <div class="card-body">
-                <!-- School Header -->
-               <!-- School Header -->
-<div class="school-header text-center">
-    {% if school_profile and school_profile.logo %}
-        <img src="{% static 'images/logo.png' %}" alt="School Logo" style="max-height:80px; margin-bottom:10px;">
-    {% else %}
-        <!-- Ikiwa hakuna logo, onyesha herufi H -->
-        <div style="width:80px;height:80px;border-radius:50%;background:#2c3e50;display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:40px;font-weight:bold;color:white;">
-            H
+        <!-- School Header -->
+        <div class="school-header">
+            {% if school_profile and school_profile.logo %}
+                <img src="{{ school_profile.logo.url }}" alt="Logo" class="school-logo">
+            {% endif %}
+            <h3 class="school-name">{{ school_profile.school_name|default:"HINAYA PRE AND PRIMARY SCHOOL" }}</h3>
+            <p>{{ school_profile.address|default:"" }}<br>Phone: {{ school_profile.phone|default:"" }} | Email: {{ school_profile.email|default:"" }}</p>
         </div>
-    {% endif %}
-    <h3 class="school-name">{{ school_profile.school_name|default:"HINAYA PRE AND PRIMARY SCHOOL" }}</h3>
-    <p class="school-address">
-        {% if school_profile %}
-            {{ school_profile.address|default:"" }}<br>
-            Phone: {{ school_profile.phone|default:"" }} | Email: {{ school_profile.email|default:"" }}
-        {% endif %}
-    </p>
-</div>
-                
-                <!-- Report Title -->
-                <div class="report-title">
-                    <h4 class="mb-0"><i class="bi bi-file-text"></i> ACADEMIC REPORT</h4>
-                </div>
-                
-                <!-- School Dates -->
-                <div class="school-dates">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <strong>School Opens:</strong> 
-                            {% if school_profile and school_profile.opening_date %}
-                                {{ school_profile.opening_date|date:"F d, Y" }}
-                            {% else %}
-                                January 15, 2026
-                            {% endif %}
-                        </div>
-                        <div class="col-md-6 text-end">
-                            <strong>School Closes:</strong> 
-                            {% if school_profile and school_profile.closing_date %}
-                                {{ school_profile.closing_date|date:"F d, Y" }}
-                            {% else %}
-                                December 15, 2026
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Student Info -->
-                <div class="row mt-4">
-                    <div class="col-md-6">
-                        <table class="table table-borderless table-sm">
-                            <tr>
-                                <td class="info-label">Student Name:</td>
-                                <td><strong>{{ student.first_name }} {{ student.last_name }}</strong></td>
-                            </tr>
-                            <tr>
-                                <td class="info-label">Gender:</td>
-                                <td>{{ student.gender }}</td>
-                            </tr>
-                            <tr>
-                                <td class="info-label">Date of Birth:</td>
-                                <td>{{ student.date_of_birth|date:"F d, Y" }}</td>
-                            </tr>
-                            <tr>
-                                <td class="info-label">Class:</td>
-                                <td><strong>{{ student.current_class }}</strong></td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div class="col-md-6">
-                        <table class="table table-borderless table-sm">
-                            <tr>
-                                <td class="info-label">Parent/Guardian:</td>
-                                <td><strong>{{ student.parent_name }}</strong></td>
-                            </tr>
-                            <tr>
-                                <td class="info-label">Parent Phone:</td>
-                                <td>{{ student.parent_phone }}</td>
-                            </tr>
-                            <tr>
-                                <td class="info-label">Address:</td>
-                                <td>{{ student.address|default:"-" }}</td>
-                            </tr>
-                            <tr>
-                                <td class="info-label">Report Date:</td>
-                                <td><strong>{% now "F d, Y" %}</strong></td>
-                            </tr>
-                        </table>
-                    </div>
-                </div>
-                
-                <!-- Academic Performance -->
-                <h5 class="mt-4" style="background:#2c3e50; color:white; padding:8px; border-radius:5px;">
-                    <i class="bi bi-book"></i> Academic Performance
-                </h5>
-                <table class="table table-bordered">
-                    <thead style="background:#ecf0f1;">
-                        <tr>
-                            <th>Subject</th>
-                            <th>Score</th>
-                            <th>Grade</th>
-                            <th>Remarks</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for grade in grades %}
-                        <tr>
-                            <td><strong>{{ grade.subject.name }}</strong></td>
-                            <td>{{ grade.score }}</td>
-                            <td>
-                                {% if grade.score >= 80 %}
-                                    <span class="grade-A">A - Excellent</span>
-                                {% elif grade.score >= 60 %}
-                                    <span class="grade-B">B - Good</span>
-                                {% elif grade.score >= 50 %}
-                                    <span class="grade-C">C - Satisfactory</span>
-                                {% elif grade.score >= 40 %}
-                                    <span class="grade-D">D - Needs Improvement</span>
-                                {% else %}
-                                    <span class="grade-F">F - Fail</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ grade.remarks|default:"-" }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center">No grades available.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                    {% if grades %}
-                    <tfoot style="background:#ecf0f1; font-weight:bold;">
-                        <tr>
-                            <td>SUMMARY</td>
-                            <td>{{ total_score }}</td>
-                            <td>{{ average }}%</td>
-                            <td>
-                                {% if average >= 80 %}
-                                    <span style="color:#27ae60;">Excellent Performance</span>
-                                {% elif average >= 60 %}
-                                    <span style="color:#f39c12;">Good Performance</span>
-                                {% elif average >= 50 %}
-                                    <span style="color:#e67e22;">Satisfactory</span>
-                                {% elif average >= 40 %}
-                                    <span style="color:#e74c3c;">Needs Improvement</span>
-                                {% else %}
-                                    <span style="color:#c0392b;">Poor Performance</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    </tfoot>
-                    {% endif %}
-                </table>
-                
-                <!-- Fee Summary -->
-                <h5 class="mt-4" style="background:#27ae60; color:white; padding:8px; border-radius:5px;">
-                    <i class="bi bi-cash"></i> Fee Summary
-                </h5>
-                <table class="table table-bordered">
-                    <thead style="background:#ecf0f1;">
-                        <tr>
-                            <th>Term</th>
-                            <th>Total Fee (TSh)</th>
-                            <th>Amount Paid (TSh)</th>
-                            <th>Balance (TSh)</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for fee in fees %}
-                        <tr>
-                            <td>{{ fee.term.name }} - {{ fee.term.year }}</td>
-                            <td>{{ fee.total_fee|floatformat:2|default:"0.00" }}</td>
-                            <td>{{ fee.amount_paid|floatformat:2|default:"0.00" }}</td>
-                            <td class="{% if fee.balance > 0 %}text-danger{% else %}text-success{% endif %}">
-                                {{ fee.balance|floatformat:2|default:"0.00" }}
-                            </td>
-                            <td>
-                                {% if fee.is_completed %}
-                                    <span class="badge bg-success">Completed</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Pending</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center">No fee records available.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                
-                <!-- Signature Section -->
-                <div class="row mt-4">
-                    <div class="col-md-4 text-center">
-                        <p><strong>Student's Parent/Guardian</strong></p>
-                        <p>___________________</p>
-                        <p>Signature & Date</p>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <p><strong>Class Teacher</strong></p>
-                        <p>___________________</p>
-                        <p>Signature & Date</p>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <p><strong>Principal</strong></p>
-                        {% if school_profile and school_profile.principal_signature %}
-                            <img src="{{ school_profile.principal_signature.url }}" alt="Signature" class="signature-img">
-                        {% else %}
-                            <p>A.Kijaji</p>
-                        {% endif %}
-                        <p>
-                            {% if school_profile %}
-                                {{ school_profile.principal_name|default:"Head of School" }}
-                            {% else %}
-                                Head of School
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- Footer -->
-                <div class="footer">
-                    <p>
-                        <i class="bi bi-envelope"></i> {{ school_profile.email|default:"info@hinaya.ac.tz" }} | 
-                        <i class="bi bi-telephone"></i> {{ school_profile.phone|default:"+255 000 000 000" }} | 
-                        <i class="bi bi-geo-alt"></i> {{ school_profile.location|default:"Tanzania" }}
-                    </p>
-                    <p>This report is generated automatically. For any inquiries, please contact the school.</p>
-                    <p>© {% now "Y" %} {{ school_profile.school_name|default:"HINAYA PRE AND PRIMARY SCHOOL" }}. All rights reserved.</p>
-                </div>
+        
+        <!-- Report Title -->
+        <div class="report-title"><h4>ACADEMIC REPORT</h4></div>
+        
+        <!-- Student Info -->
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Name:</strong> {{ student.first_name }} {{ student.last_name }}</p>
+                <p><strong>Gender:</strong> {{ student.gender }}</p>
+                <p><strong>Class:</strong> {{ student.current_class }}</p>
             </div>
+            <div class="col-md-6">
+                <p><strong>Parent:</strong> {{ student.parent_name }}</p>
+                <p><strong>Phone:</strong> {{ student.parent_phone }}</p>
+                <p><strong>Date:</strong> {% now "F d, Y" %}</p>
+            </div>
+        </div>
+        
+        <!-- Grades -->
+        <h5 class="mt-4">Academic Performance</h5>
+        <table class="table table-bordered">
+            <thead><tr><th>Subject</th><th>Score</th><th>Grade</th><th>Remarks</th></tr></thead>
+            <tbody>
+                {% for grade in grades %}
+                <tr>
+                    <td>{{ grade.subject.name }}</td>
+                    <td>{{ grade.score }}</td>
+                    <td>
+                        {% if grade.score >= 80 %}A
+                        {% elif grade.score >= 60 %}B
+                        {% elif grade.score >= 50 %}C
+                        {% elif grade.score >= 40 %}D
+                        {% else %}F{% endif %}
+                    </td>
+                    <td>{{ grade.remarks|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="text-center">No grades available.</td></tr>
+                {% endfor %}
+            </tbody>
+            {% if grades %}
+            <tfoot>
+                <tr style="font-weight:bold; background:#ecf0f1;">
+                    <td>SUMMARY</td>
+                    <td>{{ total_score }}</td>
+                    <td>{{ average }}%</td>
+                    <td>
+                        {% if average >= 80 %}Excellent
+                        {% elif average >= 60 %}Good
+                        {% elif average >= 50 %}Satisfactory
+                        {% elif average >= 40 %}Needs Improvement
+                        {% else %}Poor{% endif %}
+                    </td>
+                </tr>
+            </tfoot>
+            {% endif %}
+        </table>
+        
+        <!-- Fee Summary -->
+        <h5 class="mt-4">Fee Summary</h5>
+        <table class="table table-bordered">
+            <thead><tr><th>Term</th><th>Total (TSh)</th><th>Paid (TSh)</th><th>Balance (TSh)</th><th>Status</th></tr></thead>
+            <tbody>
+                {% for fee in fees %}
+                <tr>
+                    <td>{{ fee.term.name }} - {{ fee.term.year }}</td>
+                    <td>{{ fee.total_fee|floatformat:2|default:"0.00" }}</td>
+                    <td>{{ fee.amount_paid|floatformat:2|default:"0.00" }}</td>
+                    <td class="{% if fee.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ fee.balance|floatformat:2|default:"0.00" }}
+                    </td>
+                    <td>{% if fee.is_completed %}✅ Completed{% else %}❌ Pending{% endif %}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="text-center">No fee records.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Signature -->
+        <div class="row mt-4">
+            <div class="col-4 text-center">
+                <p><strong>Parent/Guardian</strong></p>
+                <p>___________________</p>
+            </div>
+            <div class="col-4 text-center">
+                <p><strong>Class Teacher</strong></p>
+                <p>___________________</p>
+            </div>
+            <div class="col-4 text-center">
+                <p><strong>Principal</strong></p>
+                {% if school_profile and school_profile.principal_signature %}
+                    <img src="{{ school_profile.principal_signature.url }}" class="signature-img">
+                {% else %}
+                    <p>___________________</p>
+                {% endif %}
+                <p>{{ school_profile.principal_name|default:"Head of School" }}</p>
+            </div>
+        </div>
+        
+        <div class="text-center mt-3" style="font-size:12px; color:#7f8c8d;">
+            © {% now "Y" %} {{ school_profile.school_name|default:"HINAYA PRE AND PRIMARY SCHOOL" }}. All rights reserved.
         </div>
     </div>
 </body>
