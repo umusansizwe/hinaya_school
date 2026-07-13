@@ -273,7 +273,7 @@ def add_teacher(request):
         phone = request.POST.get('phone')
         gender = request.POST.get('gender')
         subject_ids = request.POST.getlist('subjects')
-        assigned_class_id = request.POST.get('assigned_class')
+        assigned_class_ids = request.POST.getlist('assigned_classes')
         
         if User.objects.filter(username=username).exists():
             messages.error(request, 'Username already exists!')
@@ -293,12 +293,16 @@ def add_teacher(request):
         teacher = Teacher.objects.create(
             user=user,
             phone=phone,
-            gender=gender,
-            assigned_class_id=assigned_class_id if assigned_class_id else None
+            gender=gender
         )
         
         if subject_ids:
             teacher.subjects.set(subject_ids)
+        
+        if assigned_class_ids:
+            for class_id in assigned_class_ids:
+                class_obj = Class.objects.get(id=class_id)
+                teacher.assigned_classes.add(class_obj)
         
         messages.success(request, f'Teacher {first_name} {last_name} added successfully!')
         return redirect('headmaster_teachers')
