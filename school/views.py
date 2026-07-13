@@ -599,3 +599,31 @@ def update_school_profile(request):
         return redirect('admin_dashboard')
     
     return render(request, 'admin/update_profile.html', {'profile': profile})
+@login_required
+def set_fee(request):
+    if request.method == 'POST':
+        fee_id = request.POST.get('fee_id')
+        total_fee = request.POST.get('total_fee')
+        
+        try:
+            fee = get_object_or_404(Fee, id=fee_id)
+            total_fee = float(total_fee)
+            
+            if total_fee >= 0:
+                fee.total_fee = total_fee
+                # Recalculate balance
+                fee.balance = fee.total_fee - fee.amount_paid
+                if fee.balance <= 0:
+                    fee.is_completed = True
+                else:
+                    fee.is_completed = False
+                fee.save()
+                messages.success(request, f'✅ Fee set to {total_fee} for {fee.student.first_name}')
+            else:
+                messages.error(request, 'Fee must be greater than or equal to zero.')
+        except (ValueError, TypeError):
+            messages.error(request, 'Invalid amount.')
+        
+        return redirect('accountant_dashboard')
+    
+    return redirect('accountant_dashboard')

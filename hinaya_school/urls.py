@@ -25,6 +25,7 @@ urlpatterns = [
     # Accountant URLs
     path('accountant/', views.accountant_dashboard, name='accountant_dashboard'),
     path('accountant/add_payment/', views.add_payment, name='add_payment'),
+    path('accountant/set_fee/', views.set_fee, name='set_fee'),
     
     # Teacher URLs
     path('teacher/', views.teacher_dashboard, name='teacher_dashboard'),
