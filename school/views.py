@@ -372,8 +372,10 @@ def accountant_dashboard(request):
     # Wanafunzi wote
     all_students = Student.objects.filter(is_active=True)
     
-    # Unda fee record kwa kila mwanafunzi ikiwa haipo
+    # Pata muhula wa sasa
     active_term = AcademicTerm.objects.filter(is_active=True).first()
+    
+    # Hakikisha kila mwanafunzi ana fee record
     if active_term:
         for student in all_students:
             Fee.objects.get_or_create(
@@ -385,7 +387,7 @@ def accountant_dashboard(request):
     # Wanafunzi wenye deni
     debtors = Fee.objects.filter(balance__gt=0).select_related('student')
     
-    # Waliomaliza deni
+    # Waliomaliza
     completed = Fee.objects.filter(is_completed=True).select_related('student')
     
     # Jumla ya deni
@@ -398,7 +400,6 @@ def accountant_dashboard(request):
         'total_debt': total_debt,
         'debtor_count': debtors.count(),
         'completed_count': completed.count(),
-        'active_term': active_term,
     }
     return render(request, 'accountant/dashboard.html', context)
 
@@ -408,24 +409,32 @@ def add_payment(request):
         fee_id = request.POST.get('fee_id')
         amount = request.POST.get('amount')
         
+        if not fee_id or not amount:
+            messages.error(request, 'Please fill all fields.')
+            return redirect('accountant_dashboard')
+        
         try:
             fee = get_object_or_404(Fee, id=fee_id)
             amount = float(amount)
             
             if amount > 0:
                 fee.amount_paid += amount
-                fee.save()
+                fee.balance = fee.total_fee - fee.amount_paid
                 
                 if fee.balance <= 0:
                     fee.is_completed = True
-                    fee.save()
-                    messages.success(request, f'✅ Payment complete! {fee.student.first_name} has cleared the debt!')
                 else:
-                    messages.success(request, f'✅ Payment of {amount} added! Remaining balance: {fee.balance}')
+                    fee.is_completed = False
+                
+                fee.save()
+                messages.success(request, f'✅ Payment of {amount} added for {fee.student.first_name}')
             else:
                 messages.error(request, 'Amount must be greater than zero.')
-        except (ValueError, TypeError):
-            messages.error(request, 'Invalid amount.')
+                
+        except ValueError:
+            messages.error(request, 'Please enter a valid number.')
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
         
         return redirect('accountant_dashboard')
     
@@ -606,24 +615,25 @@ def set_fee(request):
         fee_id = request.POST.get('fee_id')
         total_fee = request.POST.get('total_fee')
         
+        if not fee_id or not total_fee:
+            messages.error(request, 'Please fill all fields.')
+            return redirect('accountant_dashboard')
+        
         try:
             fee = get_object_or_404(Fee, id=fee_id)
             total_fee = float(total_fee)
             
-            if total_fee >= 0:
-                fee.total_fee = total_fee
-                fee.balance = fee.total_fee - fee.amount_paid
-                
-                if fee.balance <= 0:
-                    fee.is_completed = True
-                else:
-                    fee.is_completed = False
-                
-                fee.save()
-                messages.success(request, f'✅ Fee set to {total_fee} for {fee.student.first_name} {fee.student.last_name}')
+            fee.total_fee = total_fee
+            fee.balance = fee.total_fee - fee.amount_paid
+            
+            if fee.balance <= 0:
+                fee.is_completed = True
             else:
-                messages.error(request, 'Fee must be greater than or equal to zero.')
-                
+                fee.is_completed = False
+            
+            fee.save()
+            messages.success(request, f'✅ Fee set to {total_fee} for {fee.student.first_name}')
+            
         except ValueError:
             messages.error(request, 'Please enter a valid number.')
         except Exception as e:
