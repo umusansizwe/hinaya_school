@@ -372,6 +372,18 @@ def accountant_dashboard(request):
     # Wanafunzi wote
     all_students = Student.objects.filter(is_active=True)
     
+    # Pata muhula wa sasa
+    active_term = AcademicTerm.objects.filter(is_active=True).first()
+    
+    # Hakikisha kila mwanafunzi ana fee record
+    if active_term:
+        for student in all_students:
+            Fee.objects.get_or_create(
+                student=student,
+                term=active_term,
+                defaults={'total_fee': 0, 'amount_paid': 0}
+            )
+    
     context = {
         'all_students': all_students,
         'total_students': all_students.count(),
