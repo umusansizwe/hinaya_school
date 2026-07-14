@@ -9,6 +9,7 @@ from .models import *
 import traceback
 from django.shortcuts import get_object_or_404
 from .models import Student, Grade, Fee, SchoolProfile
+from .models import Fee
 
 # ========== LOGIN & LOGOUT ==========
 
@@ -611,18 +612,22 @@ def set_fee(request):
             
             if total_fee >= 0:
                 fee.total_fee = total_fee
-                # Recalculate balance
                 fee.balance = fee.total_fee - fee.amount_paid
+                
                 if fee.balance <= 0:
                     fee.is_completed = True
                 else:
                     fee.is_completed = False
+                
                 fee.save()
-                messages.success(request, f'✅ Fee set to {total_fee} for {fee.student.first_name}')
+                messages.success(request, f'✅ Fee set to {total_fee} for {fee.student.first_name} {fee.student.last_name}')
             else:
                 messages.error(request, 'Fee must be greater than or equal to zero.')
-        except (ValueError, TypeError):
-            messages.error(request, 'Invalid amount.')
+                
+        except ValueError:
+            messages.error(request, 'Please enter a valid number.')
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
         
         return redirect('accountant_dashboard')
     
