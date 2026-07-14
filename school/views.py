@@ -384,12 +384,8 @@ def add_payment(request):
         fee_id = request.POST.get('fee_id')
         amount = request.POST.get('amount')
         
-        if not fee_id or not amount:
-            messages.error(request, 'Please fill all fields.')
-            return redirect('accountant_dashboard')
-        
         try:
-            fee = get_object_or_404(Fee, id=fee_id)
+            fee = Fee.objects.get(id=fee_id)
             amount = float(amount)
             
             if amount > 0:
@@ -402,12 +398,9 @@ def add_payment(request):
                     fee.is_completed = False
                 
                 fee.save()
-                messages.success(request, f'✅ Payment of {amount} added for {fee.student.first_name}')
+                messages.success(request, f'✅ Payment of {amount} added for {fee.student.first_name}. Balance: {fee.balance}')
             else:
                 messages.error(request, 'Amount must be greater than zero.')
-                
-        except ValueError:
-            messages.error(request, 'Please enter a valid number.')
         except Exception as e:
             messages.error(request, f'Error: {str(e)}')
         
@@ -590,15 +583,9 @@ def set_fee(request):
         fee_id = request.POST.get('fee_id')
         total_fee = request.POST.get('total_fee')
         
-        if not fee_id or not total_fee:
-            messages.error(request, 'Please fill all fields.')
-            return redirect('accountant_dashboard')
-        
         try:
-            fee = get_object_or_404(Fee, id=fee_id)
-            total_fee = float(total_fee)
-            
-            fee.total_fee = total_fee
+            fee = Fee.objects.get(id=fee_id)
+            fee.total_fee = float(total_fee)
             fee.balance = fee.total_fee - fee.amount_paid
             
             if fee.balance <= 0:
@@ -608,9 +595,6 @@ def set_fee(request):
             
             fee.save()
             messages.success(request, f'✅ Fee set to {total_fee} for {fee.student.first_name}')
-            
-        except ValueError:
-            messages.error(request, 'Please enter a valid number.')
         except Exception as e:
             messages.error(request, f'Error: {str(e)}')
         
