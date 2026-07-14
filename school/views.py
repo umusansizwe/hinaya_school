@@ -369,13 +369,10 @@ def delete_bus(request, bus_id):
 
 @login_required
 def accountant_dashboard(request):
-    # Wanafunzi wote
     all_students = Student.objects.filter(is_active=True)
     
-    # Pata muhula wa sasa
     active_term = AcademicTerm.objects.filter(is_active=True).first()
     
-    # Hakikisha kila mwanafunzi ana fee record
     if active_term:
         for student in all_students:
             Fee.objects.get_or_create(
@@ -398,7 +395,8 @@ def add_payment(request):
         
         try:
             fee = Fee.objects.get(id=fee_id)
-            amount = float(amount)
+            from decimal import Decimal
+            amount = Decimal(str(amount))
             
             if amount > 0:
                 fee.amount_paid += amount
@@ -597,7 +595,9 @@ def set_fee(request):
         
         try:
             fee = Fee.objects.get(id=fee_id)
-            fee.total_fee = float(total_fee)
+            # Badilisha kuwa Decimal
+            from decimal import Decimal
+            fee.total_fee = Decimal(str(total_fee))
             fee.balance = fee.total_fee - fee.amount_paid
             
             if fee.balance <= 0:
