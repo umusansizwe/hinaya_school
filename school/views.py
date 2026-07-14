@@ -372,34 +372,9 @@ def accountant_dashboard(request):
     # Wanafunzi wote
     all_students = Student.objects.filter(is_active=True)
     
-    # Pata muhula wa sasa
-    active_term = AcademicTerm.objects.filter(is_active=True).first()
-    
-    # Hakikisha kila mwanafunzi ana fee record
-    if active_term:
-        for student in all_students:
-            Fee.objects.get_or_create(
-                student=student,
-                term=active_term,
-                defaults={'total_fee': 0, 'amount_paid': 0}
-            )
-    
-    # Wanafunzi wenye deni
-    debtors = Fee.objects.filter(balance__gt=0).select_related('student')
-    
-    # Waliomaliza
-    completed = Fee.objects.filter(is_completed=True).select_related('student')
-    
-    # Jumla ya deni
-    total_debt = Fee.objects.aggregate(total=Sum('balance'))['total'] or 0
-    
     context = {
         'all_students': all_students,
-        'debtors': debtors,
-        'completed': completed,
-        'total_debt': total_debt,
-        'debtor_count': debtors.count(),
-        'completed_count': completed.count(),
+        'total_students': all_students.count(),
     }
     return render(request, 'accountant/dashboard.html', context)
 

@@ -4,173 +4,62 @@
     <title>Accountant Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
-    <style>
-        body { background: #f0f2f5; }
-        .sidebar {
-            min-height: 100vh;
-            background: #2c3e50;
-            color: white;
-            padding: 20px 0;
-        }
-        .sidebar a {
-            color: #ecf0f1;
-            text-decoration: none;
-            display: block;
-            padding: 12px 20px;
-            border-left: 3px solid transparent;
-        }
-        .sidebar a:hover {
-            background: #34495e;
-            border-left: 3px solid #27ae60;
-        }
-        .sidebar a i { margin-right: 10px; }
-        .main-content { padding: 30px; }
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .stat-card h2 { margin: 0; color: #2c3e50; }
-        .stat-card p { color: #7f8c8d; }
-        .debt { color: #e74c3c; }
-        .paid { color: #27ae60; }
-        .btn-pay { background: #27ae60; color: white; border: none; padding: 5px 15px; border-radius: 5px; }
-        .btn-pay:hover { background: #2ecc71; color: white; }
-        .btn-set { background: #3498db; color: white; border: none; padding: 5px 15px; border-radius: 5px; }
-        .btn-set:hover { background: #2980b9; color: white; }
-        .fee-form { display: inline-block; margin-right: 5px; }
-        .fee-form input { width: 80px; padding: 3px 5px; border: 1px solid #ddd; border-radius: 4px; }
-    </style>
 </head>
 <body>
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-2 sidebar">
-                <h4 class="text-center py-3">🏫 HINAYA</h4>
+            <div class="col-md-2 bg-dark text-white vh-100 p-3">
+                <h4 class="text-center">🏫 HINAYA</h4>
                 <hr>
-                <a href="/accountant/">
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                </a>
+                <a href="/accountant/" class="text-white d-block py-2">Dashboard</a>
                 <hr>
-                <a href="/logout/">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                </a>
+                <a href="/logout/" class="text-white d-block py-2">Logout</a>
             </div>
-            
-            <!-- Main Content -->
-            <div class="col-md-10 main-content">
-                <h2><i class="bi bi-cash-stack"></i> Accountant Dashboard</h2>
-                <p>Welcome, {{ user.first_name }} {{ user.last_name }}</p>
+            <div class="col-md-10 p-4">
+                <h2>Accountant Dashboard</h2>
+                <p>Welcome, {{ user.first_name }}</p>
                 
-                <!-- Stats -->
                 <div class="row mt-4">
                     <div class="col-md-4">
-                        <div class="stat-card">
-                            <div class="debt"><i class="bi bi-exclamation-triangle" style="font-size:2rem;"></i></div>
-                            <h2>{{ debtor_count }}</h2>
-                            <p>Students with Debt</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-card">
-                            <div class="paid"><i class="bi bi-check-circle" style="font-size:2rem;"></i></div>
-                            <h2>{{ completed_count }}</h2>
-                            <p>Students Completed</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-card">
-                            <div class="debt"><i class="bi bi-currency-dollar" style="font-size:2rem;"></i></div>
-                            <h2>TSh {{ total_debt|floatformat:2 }}</h2>
-                            <p>Total Debt</p>
+                        <div class="card text-center">
+                            <div class="card-body">
+                                <h3>{{ total_students }}</h3>
+                                <p>Total Students</p>
+                            </div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- All Students with Fee Management -->
                 <div class="mt-4">
                     <div class="card">
                         <div class="card-header bg-primary text-white">
-                            <h5><i class="bi bi-people"></i> All Students - Fee Management</h5>
+                            <h5>Students List</h5>
                         </div>
                         <div class="card-body">
-                            {% if messages %}
-                                {% for message in messages %}
-                                    <div class="alert alert-success">{{ message }}</div>
-                                {% endfor %}
-                            {% endif %}
-                            
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped">
-                                    <thead>
-                                        <tr>
-                                            <th>#</th>
-                                            <th>Student</th>
-                                            <th>Class</th>
-                                            <th>Set Fee</th>
-                                            <th>Add Payment</th>
-                                            <th>Total Fee</th>
-                                            <th>Paid</th>
-                                            <th>Balance</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {% for student in all_students %}
-                                        {% with fee=student.fee_set.first %}
-                                        <tr>
-                                            <td>{{ forloop.counter }}</td>
-                                            <td>{{ student.first_name }} {{ student.last_name }}</td>
-                                            <td>{{ student.current_class }}</td>
-                                            <td>
-                                                <!-- Set Total Fee -->
-                                                <form method="post" action="{% url 'set_fee' %}" class="fee-form">
-                                                    {% csrf_token %}
-                                                    <input type="hidden" name="fee_id" value="{{ fee.id }}">
-                                                    <input type="number" name="total_fee" placeholder="Set Fee" value="{{ fee.total_fee|floatformat:0 }}" required>
-                                                    <button type="submit" class="btn btn-set btn-sm">Set</button>
-                                                </form>
-                                            </td>
-                                            <td>
-    <!-- Set Total Fee -->
-    <form method="post" action="{% url 'set_fee' %}" style="display:inline;">
-        {% csrf_token %}
-        <input type="hidden" name="fee_id" value="{{ fee.id }}">
-        <input type="number" step="0.01" name="total_fee" placeholder="Set Fee" value="{{ fee.total_fee|floatformat:0 }}" style="width:80px; padding:3px; border:1px solid #ddd; border-radius:4px;">
-        <button type="submit" class="btn btn-set btn-sm" style="background:#3498db; color:white; border:none; padding:3px 10px; border-radius:4px;">
-            <i class="bi bi-pencil"></i> Set
-        </button>
-    </form>
-</td>
-                                                {% else %}
-                                                <span class="text-muted">-</span>
-                                                {% endif %}
-                                            </td>
-                                            <td>{{ fee.total_fee|floatformat:2|default:"0.00" }}</td>
-                                            <td>{{ fee.amount_paid|floatformat:2|default:"0.00" }}</td>
-                                            <td class="{% if fee.balance > 0 %}text-danger{% else %}text-success{% endif %}">
-                                                {{ fee.balance|floatformat:2|default:"0.00" }}
-                                            </td>
-                                            <td>
-                                                {% if fee.is_completed %}
-                                                    <span class="badge bg-success">✅ Completed</span>
-                                                {% else %}
-                                                    <span class="badge bg-danger">❌ Pending</span>
-                                                {% endif %}
-                                            </td>
-                                        </tr>
-                                        {% endwith %}
-                                        {% empty %}
-                                        <tr>
-                                            <td colspan="9" class="text-center">No students found.</td>
-                                        </tr>
-                                        {% endfor %}
-                                    </tbody>
-                                </table>
-                            </div>
+                            <table class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Name</th>
+                                        <th>Class</th>
+                                        <th>Parent</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for student in all_students %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ student.first_name }} {{ student.last_name }}</td>
+                                        <td>{{ student.current_class }}</td>
+                                        <td>{{ student.parent_name }}</td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No students found.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
