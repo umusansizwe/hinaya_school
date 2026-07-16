@@ -500,25 +500,36 @@ def add_marks(request):
 
 @login_required
 def parent_dashboard(request):
-    try:
-        student = Student.objects.get(parent_email=request.user.email)
-        grades = Grade.objects.filter(student=student)
-        fees = Fee.objects.filter(student=student)
-        messages_list = Message.objects.filter(parent=student).order_by('-date_sent')
+    student = None
+    grades = []
+    fees = []
+    message = ''
+    
+    if request.method == 'POST':
+        parent_phone = request.POST.get('parent_phone')
         
-        context = {
-            'student': student,
-            'grades': grades,
-            'fees': fees,
-            'messages': messages_list,
-            'total_subjects': grades.count(),
-            'total_fee': fees.first().total_fee if fees else 0,
-            'balance': fees.first().balance if fees else 0,
-        }
-        return render(request, 'parent/dashboard.html', context)
-    except Student.DoesNotExist:
-        messages.error(request, 'No student linked to your email.')
-        return render(request, 'parent/dashboard.html', {'error': 'No student found'})
+        if parent_phone:
+            # Tafuta mwanafunzi kwa namba ya simu ya mzazi
+            students = Student.objects.filter(parent_phone__icontains=parent_phone)
+            
+            if students.exists():
+                student = students.first()
+                grades = Grade.objects.filter(student=student)
+                fees = Fee.objects.filter(student=student)
+                message = f'✅ Showing report for {student.first_name} {student.last_name}'
+            else:
+                message = '❌ Student not found. Please check the phone number and try again.'
+    
+    context = {
+        'student': student,
+        'grades': grades,
+        'fees': fees,
+        'message': message,
+        'total_subjects': grades.count(),
+        'total_score': sum([g.score for g in grades]) if grades else 0,
+        'average': round(sum([g.score for g in grades]) / grades.count(), 2) if grades.count() > 0 else 0,
+    }
+    return render(request, 'parent/dashboard.html', context)
 
 @login_required
 def send_message(request):

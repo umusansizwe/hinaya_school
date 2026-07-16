@@ -5,40 +5,20 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
     <style>
-        body { background: #f5f5f5; }
-        .sidebar {
-            min-height: 100vh;
-            background: #2c3e50;
-            color: white;
-            padding: 20px 0;
-        }
-        .sidebar a {
-            color: #ecf0f1;
-            text-decoration: none;
-            display: block;
-            padding: 12px 20px;
-            border-left: 3px solid transparent;
-        }
-        .sidebar a:hover {
-            background: #34495e;
-            border-left: 3px solid #27ae60;
-        }
+        body { background: #f0f2f5; }
+        .sidebar { min-height: 100vh; background: #2c3e50; color: white; padding: 20px 0; }
+        .sidebar a { color: #ecf0f1; text-decoration: none; display: block; padding: 12px 20px; border-left: 3px solid transparent; }
+        .sidebar a:hover { background: #34495e; border-left: 3px solid #27ae60; }
         .sidebar a i { margin-right: 10px; }
         .main-content { padding: 30px; }
-        .stat-card {
-            background: white;
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            text-align: center;
-        }
-        .stat-card h2 { margin: 0; color: #2c3e50; }
-        .stat-card p { color: #7f8c8d; }
         .grade-A { color: #27ae60; font-weight: bold; }
         .grade-B { color: #f39c12; font-weight: bold; }
         .grade-C { color: #e67e22; font-weight: bold; }
         .grade-D { color: #e74c3c; font-weight: bold; }
         .grade-F { color: #c0392b; font-weight: bold; }
+        .search-box { max-width: 500px; margin: 0 auto; }
+        .phone-input { font-size: 18px; padding: 15px; }
+        .btn-search { padding: 12px 40px; font-size: 18px; }
     </style>
 </head>
 <body>
@@ -48,22 +28,46 @@
             <div class="col-md-2 sidebar">
                 <h4 class="text-center py-3">🏫 HINAYA</h4>
                 <hr>
-                <a href="/parent/">
-                    <i class="bi bi-speedometer2"></i> Dashboard
-                </a>
-                <a href="/parent/send_message/">
-                    <i class="bi bi-envelope"></i> Send Message
-                </a>
+                <a href="/parent/"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                <a href="/parent/send_message/"><i class="bi bi-envelope"></i> Send Message</a>
                 <hr>
-                <a href="/logout/">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                </a>
+                <a href="/logout/"><i class="bi bi-box-arrow-right"></i> Logout</a>
             </div>
             
             <!-- Main Content -->
             <div class="col-md-10 main-content">
                 <h2><i class="bi bi-person"></i> Parent Dashboard</h2>
                 <p>Welcome, {{ user.first_name }} {{ user.last_name }}</p>
+                
+                <!-- Search Form - Phone Number -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5><i class="bi bi-phone"></i> Enter Parent Phone Number</h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <input type="text" name="parent_phone" class="form-control phone-input" 
+                                           placeholder="Enter parent phone number (e.g., 0744451448)" required>
+                                </div>
+                                <div class="col-md-4">
+                                    <button type="submit" class="btn btn-primary btn-search w-100">
+                                        <i class="bi bi-search"></i> View Report
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <small class="text-muted">Enter the phone number used when registering your child</small>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                {% if message %}
+                    <div class="alert alert-info">{{ message }}</div>
+                {% endif %}
                 
                 {% if messages %}
                     {% for message in messages %}
@@ -72,40 +76,50 @@
                 {% endif %}
                 
                 {% if student %}
-                <div class="alert alert-info">
-                    <strong>Student:</strong> {{ student.first_name }} {{ student.last_name }} | 
-                    <strong>Class:</strong> {{ student.current_class }}
-                </div>
-                
-                <div class="row mt-4">
-                    <div class="col-md-4">
-                        <div class="stat-card">
-                            <h2>{{ total_subjects }}</h2>
-                            <p>Subjects</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-card">
-                            <h2>${{ total_fee|floatformat:2 }}</h2>
-                            <p>Total Fee</p>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="stat-card">
-                            <h2 class="text-danger">${{ balance|floatformat:2 }}</h2>
-                            <p>Balance</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Grades -->
-                <div class="mt-4">
+                    <!-- Student Report -->
                     <div class="card">
-                        <div class="card-header bg-primary text-white">
-                            <h5><i class="bi bi-book"></i> Academic Report</h5>
+                        <div class="card-header bg-success text-white">
+                            <h5><i class="bi bi-file-text"></i> Academic Report - {{ student.first_name }} {{ student.last_name }}</h5>
                         </div>
                         <div class="card-body">
-                            {% if grades %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Name:</strong> {{ student.first_name }} {{ student.last_name }}</p>
+                                    <p><strong>Class:</strong> {{ student.current_class }}</p>
+                                    <p><strong>Gender:</strong> {{ student.gender }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Parent:</strong> {{ student.parent_name }}</p>
+                                    <p><strong>Phone:</strong> {{ student.parent_phone }}</p>
+                                    <p><strong>Address:</strong> {{ student.address|default:"-" }}</p>
+                                </div>
+                            </div>
+                            <hr>
+                            
+                            <!-- Summary Stats -->
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="alert alert-info text-center">
+                                        <h5>Total Subjects</h5>
+                                        <h2>{{ total_subjects }}</h2>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="alert alert-success text-center">
+                                        <h5>Total Score</h5>
+                                        <h2>{{ total_score }}</h2>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="alert alert-warning text-center">
+                                        <h5>Average</h5>
+                                        <h2>{{ average }}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Grades Table -->
+                            <h5 class="mt-4">Academic Performance</h5>
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
@@ -122,65 +136,65 @@
                                         <td>{{ grade.score }}</td>
                                         <td>
                                             {% if grade.score >= 80 %}
-                                                <span class="grade-A">A</span>
+                                                <span class="grade-A">A - Excellent</span>
                                             {% elif grade.score >= 60 %}
-                                                <span class="grade-B">B</span>
+                                                <span class="grade-B">B - Good</span>
                                             {% elif grade.score >= 50 %}
-                                                <span class="grade-C">C</span>
+                                                <span class="grade-C">C - Satisfactory</span>
                                             {% elif grade.score >= 40 %}
-                                                <span class="grade-D">D</span>
+                                                <span class="grade-D">D - Needs Improvement</span>
                                             {% else %}
-                                                <span class="grade-F">F</span>
+                                                <span class="grade-F">F - Fail</span>
                                             {% endif %}
                                         </td>
                                         <td>{{ grade.remarks }}</td>
                                     </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">No grades available.</td>
+                                    </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
-                            {% else %}
-                            <p>No grades available yet.</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Messages -->
-                <div class="mt-4">
-                    <div class="card">
-                        <div class="card-header bg-success text-white">
-                            <h5><i class="bi bi-chat-dots"></i> My Messages</h5>
-                        </div>
-                        <div class="card-body">
-                            {% if messages_list %}
+                            
+                            <!-- Fee Summary -->
+                            <h5 class="mt-4">Fee Summary</h5>
                             <table class="table table-bordered">
                                 <thead>
                                     <tr>
-                                        <th>Subject</th>
-                                        <th>Message</th>
-                                        <th>Date</th>
+                                        <th>Term</th>
+                                        <th>Total Fee</th>
+                                        <th>Amount Paid</th>
+                                        <th>Balance</th>
+                                        <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {% for msg in messages_list %}
+                                    {% for fee in fees %}
                                     <tr>
-                                        <td>{{ msg.subject }}</td>
-                                        <td>{{ msg.message }}</td>
-                                        <td>{{ msg.date_sent|date:"Y-m-d H:i" }}</td>
+                                        <td>{{ fee.term.name }} - {{ fee.term.year }}</td>
+                                        <td>TSh {{ fee.total_fee|floatformat:2 }}</td>
+                                        <td>TSh {{ fee.amount_paid|floatformat:2 }}</td>
+                                        <td class="{% if fee.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                            TSh {{ fee.balance|floatformat:2 }}
+                                        </td>
+                                        <td>
+                                            {% if fee.is_completed %}
+                                                <span class="badge bg-success">✅ Completed</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">❌ Pending</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="5" class="text-center">No fee records available.</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
-                            {% else %}
-                            <p>No messages sent yet.</p>
-                            {% endif %}
                         </div>
                     </div>
-                </div>
-                {% else %}
-                <div class="alert alert-warning">
-                    <i class="bi bi-exclamation-triangle"></i> No student linked to this account.
-                </div>
                 {% endif %}
             </div>
         </div>
