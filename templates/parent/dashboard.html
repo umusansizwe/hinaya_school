@@ -4,62 +4,38 @@
     <title>Parent Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
-    <style>
-        body { background: #f0f2f5; }
-        .sidebar { min-height: 100vh; background: #2c3e50; color: white; padding: 20px 0; }
-        .sidebar a { color: #ecf0f1; text-decoration: none; display: block; padding: 12px 20px; border-left: 3px solid transparent; }
-        .sidebar a:hover { background: #34495e; border-left: 3px solid #27ae60; }
-        .sidebar a i { margin-right: 10px; }
-        .main-content { padding: 30px; }
-        .grade-A { color: #27ae60; font-weight: bold; }
-        .grade-B { color: #f39c12; font-weight: bold; }
-        .grade-C { color: #e67e22; font-weight: bold; }
-        .grade-D { color: #e74c3c; font-weight: bold; }
-        .grade-F { color: #c0392b; font-weight: bold; }
-        .search-box { max-width: 500px; margin: 0 auto; }
-        .phone-input { font-size: 18px; padding: 15px; }
-        .btn-search { padding: 12px 40px; font-size: 18px; }
-    </style>
 </head>
 <body>
     <div class="container-fluid">
         <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-2 sidebar">
-                <h4 class="text-center py-3">🏫 HINAYA</h4>
+            <div class="col-md-2 bg-dark text-white vh-100 p-3">
+                <h4 class="text-center">🏫 HINAYA</h4>
                 <hr>
-                <a href="/parent/"><i class="bi bi-speedometer2"></i> Dashboard</a>
-                <a href="/parent/send_message/"><i class="bi bi-envelope"></i> Send Message</a>
+                <a href="/parent/" class="text-white d-block py-2">Dashboard</a>
+                <a href="/parent/send_message/" class="text-white d-block py-2">Send Message</a>
                 <hr>
-                <a href="/logout/"><i class="bi bi-box-arrow-right"></i> Logout</a>
+                <a href="/logout/" class="text-white d-block py-2">Logout</a>
             </div>
-            
-            <!-- Main Content -->
-            <div class="col-md-10 main-content">
-                <h2><i class="bi bi-person"></i> Parent Dashboard</h2>
-                <p>Welcome, {{ user.first_name }} {{ user.last_name }}</p>
+            <div class="col-md-10 p-4">
+                <h2>Parent Dashboard</h2>
+                <p>Welcome, {{ user.first_name }}</p>
                 
-                <!-- Search Form - Phone Number -->
+                <!-- Search Form -->
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
-                        <h5><i class="bi bi-phone"></i> Enter Parent Phone Number</h5>
+                        <h5>Enter Parent Phone Number</h5>
                     </div>
                     <div class="card-body">
                         <form method="post">
                             {% csrf_token %}
                             <div class="row">
                                 <div class="col-md-8">
-                                    <input type="text" name="parent_phone" class="form-control phone-input" 
-                                           placeholder="Enter parent phone number (e.g., 0744451448)" required>
+                                    <input type="text" name="parent_phone" class="form-control" 
+                                           placeholder="Enter parent phone number" required>
                                 </div>
                                 <div class="col-md-4">
-                                    <button type="submit" class="btn btn-primary btn-search w-100">
-                                        <i class="bi bi-search"></i> View Report
-                                    </button>
+                                    <button type="submit" class="btn btn-primary w-100">View Report</button>
                                 </div>
-                            </div>
-                            <div class="mt-2">
-                                <small class="text-muted">Enter the phone number used when registering your child</small>
                             </div>
                         </form>
                     </div>
@@ -69,38 +45,20 @@
                     <div class="alert alert-info">{{ message }}</div>
                 {% endif %}
                 
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-success">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
-                
                 {% if student %}
-                    <!-- Student Report -->
                     <div class="card">
                         <div class="card-header bg-success text-white">
-                            <h5><i class="bi bi-file-text"></i> Academic Report - {{ student.first_name }} {{ student.last_name }}</h5>
+                            <h5>Report for {{ student.first_name }} {{ student.last_name }}</h5>
                         </div>
                         <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <p><strong>Name:</strong> {{ student.first_name }} {{ student.last_name }}</p>
-                                    <p><strong>Class:</strong> {{ student.current_class }}</p>
-                                    <p><strong>Gender:</strong> {{ student.gender }}</p>
-                                </div>
-                                <div class="col-md-6">
-                                    <p><strong>Parent:</strong> {{ student.parent_name }}</p>
-                                    <p><strong>Phone:</strong> {{ student.parent_phone }}</p>
-                                    <p><strong>Address:</strong> {{ student.address|default:"-" }}</p>
-                                </div>
-                            </div>
+                            <p><strong>Class:</strong> {{ student.current_class }}</p>
+                            <p><strong>Parent:</strong> {{ student.parent_name }}</p>
                             <hr>
                             
-                            <!-- Summary Stats -->
                             <div class="row">
                                 <div class="col-md-4">
                                     <div class="alert alert-info text-center">
-                                        <h5>Total Subjects</h5>
+                                        <h5>Subjects</h5>
                                         <h2>{{ total_subjects }}</h2>
                                     </div>
                                 </div>
@@ -118,16 +76,10 @@
                                 </div>
                             </div>
                             
-                            <!-- Grades Table -->
                             <h5 class="mt-4">Academic Performance</h5>
                             <table class="table table-bordered">
                                 <thead>
-                                    <tr>
-                                        <th>Subject</th>
-                                        <th>Score</th>
-                                        <th>Grade</th>
-                                        <th>Remarks</th>
-                                    </tr>
+                                    <tr><th>Subject</th><th>Score</th><th>Grade</th><th>Remarks</th></tr>
                                 </thead>
                                 <tbody>
                                     {% for grade in grades %}
@@ -135,61 +87,38 @@
                                         <td>{{ grade.subject.name }}</td>
                                         <td>{{ grade.score }}</td>
                                         <td>
-                                            {% if grade.score >= 80 %}
-                                                <span class="grade-A">A - Excellent</span>
-                                            {% elif grade.score >= 60 %}
-                                                <span class="grade-B">B - Good</span>
-                                            {% elif grade.score >= 50 %}
-                                                <span class="grade-C">C - Satisfactory</span>
-                                            {% elif grade.score >= 40 %}
-                                                <span class="grade-D">D - Needs Improvement</span>
-                                            {% else %}
-                                                <span class="grade-F">F - Fail</span>
-                                            {% endif %}
+                                            {% if grade.score >= 80 %}A
+                                            {% elif grade.score >= 60 %}B
+                                            {% elif grade.score >= 50 %}C
+                                            {% elif grade.score >= 40 %}D
+                                            {% else %}F{% endif %}
                                         </td>
                                         <td>{{ grade.remarks }}</td>
                                     </tr>
                                     {% empty %}
-                                    <tr>
-                                        <td colspan="4" class="text-center">No grades available.</td>
-                                    </tr>
+                                    <tr><td colspan="4">No grades available.</td></tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                             
-                            <!-- Fee Summary -->
                             <h5 class="mt-4">Fee Summary</h5>
                             <table class="table table-bordered">
                                 <thead>
-                                    <tr>
-                                        <th>Term</th>
-                                        <th>Total Fee</th>
-                                        <th>Amount Paid</th>
-                                        <th>Balance</th>
-                                        <th>Status</th>
-                                    </tr>
+                                    <tr><th>Term</th><th>Total</th><th>Paid</th><th>Balance</th><th>Status</th></tr>
                                 </thead>
                                 <tbody>
                                     {% for fee in fees %}
                                     <tr>
-                                        <td>{{ fee.term.name }} - {{ fee.term.year }}</td>
-                                        <td>TSh {{ fee.total_fee|floatformat:2 }}</td>
-                                        <td>TSh {{ fee.amount_paid|floatformat:2 }}</td>
+                                        <td>{{ fee.term.name }}</td>
+                                        <td>{{ fee.total_fee|floatformat:2 }}</td>
+                                        <td>{{ fee.amount_paid|floatformat:2 }}</td>
                                         <td class="{% if fee.balance > 0 %}text-danger{% else %}text-success{% endif %}">
-                                            TSh {{ fee.balance|floatformat:2 }}
+                                            {{ fee.balance|floatformat:2 }}
                                         </td>
-                                        <td>
-                                            {% if fee.is_completed %}
-                                                <span class="badge bg-success">✅ Completed</span>
-                                            {% else %}
-                                                <span class="badge bg-danger">❌ Pending</span>
-                                            {% endif %}
-                                        </td>
+                                        <td>{% if fee.is_completed %}✅ Completed{% else %}❌ Pending{% endif %}</td>
                                     </tr>
                                     {% empty %}
-                                    <tr>
-                                        <td colspan="5" class="text-center">No fee records available.</td>
-                                    </tr>
+                                    <tr><td colspan="5">No fee records.</td></tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
