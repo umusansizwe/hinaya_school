@@ -321,14 +321,15 @@ def add_teacher(request):
 
 @login_required
 def delete_teacher(request, teacher_id):
-    teacher = get_object_or_404(Teacher, id=teacher_id)
-    if request.method == 'POST':
+    try:
+        teacher = Teacher.objects.get(id=teacher_id)
         name = f"{teacher.user.first_name} {teacher.user.last_name}"
-        teacher.user.delete()
-        messages.success(request, f'Teacher {name} deleted successfully!')
-        return redirect('headmaster_teachers')
+        teacher.user.delete()  # Hii inafuta user na teacher
+        messages.success(request, f'✅ Teacher {name} deleted successfully!')
+    except Teacher.DoesNotExist:
+        messages.error(request, 'Teacher not found!')
     
-    return render(request, 'headmaster/delete_teacher.html', {'teacher': teacher})
+    return redirect('headmaster_teachers')
 
 # ========== ADD / DELETE BUS ==========
 
