@@ -24,11 +24,8 @@
         </div>
         
         <!-- School Header -->
-{% load static %}
-<!-- School Logo -->
-<div class="text-center">
-    <img src="/media/school/logo.png" alt="School Logo" style="max-height:80px; margin-bottom:10px; border-radius:50%; border:2px solid #2c3e50; padding:5px; background:white;">
-</div>
+<div class="school-header text-center">
+    <div style="font-size:50px; margin-bottom:10px;">🏫</div>
     <h3 class="school-name">{{ school_profile.school_name|default:"HINAYA PRE AND PRIMARY SCHOOL" }}</h3>
     <p class="school-address">
         {% if school_profile %}
