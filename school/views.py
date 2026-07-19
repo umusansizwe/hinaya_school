@@ -509,16 +509,13 @@ def parent_dashboard(request):
         parent_phone = request.POST.get('parent_phone')
         
         if parent_phone:
-            # Tafuta mwanafunzi kwa namba ya simu
-            students = Student.objects.filter(parent_phone__icontains=parent_phone)
-            
-            if students.exists():
-                student = students.first()
+            try:
+                student = Student.objects.get(parent_phone=parent_phone)
                 grades = Grade.objects.filter(student=student)
                 fees = Fee.objects.filter(student=student)
-                message = f'✅ Showing report for {student.first_name} {student.last_name}'
-            else:
-                message = '❌ Student not found. Please check the phone number.'
+                message = f'✅ Report for {student.first_name} {student.last_name}'
+            except Student.DoesNotExist:
+                message = '❌ No student found with that phone number'
     
     context = {
         'student': student,
