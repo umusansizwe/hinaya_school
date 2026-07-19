@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.urls import path
 from school import views
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -16,7 +18,7 @@ urlpatterns = [
     path('headmaster/add_student/', views.add_student, name='add_student'),
     path('headmaster/delete_student/<int:student_id>/', views.delete_student, name='delete_student'),
     path('headmaster/promote/', views.promote_students, name='promote_students'),
-    path('headmaster/delete_teacher/<int:teacher_id>/', views.delete_teacher, name='delete_teacher'),
+    path('headmaster/delete_teacher/< int:teacher_id>/', views.delete_teacher, name='delete_teacher'),
     path('headmaster/add_teacher/', views.add_teacher, name='add_teacher'),
     path('headmaster/add_bus/', views.add_bus, name='add_bus'),
     path('headmaster/delete_bus/<int:bus_id>/', views.delete_bus, name='delete_bus'),
@@ -39,3 +41,6 @@ urlpatterns = [
     path('superadmin/', views.admin_dashboard, name='admin_dashboard'),
     path('superadmin/update_profile/', views.update_school_profile, name='update_school_profile'),
 ]
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    
