@@ -500,32 +500,43 @@ def add_marks(request):
 
 @login_required
 def parent_dashboard(request):
-    student = None
-    grades = []
-    fees = []
-    message = ''
+    context = {
+        'student': None,
+        'grades': [],
+        'fees': [],
+        'message': '',
+        'total_subjects': 0,
+        'total_score': 0,
+        'average': 0,
+    }
     
     if request.method == 'POST':
-        parent_phone = request.POST.get('parent_phone')
+        parent_phone = request.POST.get('parent_phone', '').strip()
         
         if parent_phone:
             try:
                 student = Student.objects.get(parent_phone=parent_phone)
                 grades = Grade.objects.filter(student=student)
                 fees = Fee.objects.filter(student=student)
-                message = f'✅ Report for {student.first_name} {student.last_name}'
+                
+                total_score = sum(grade.score for grade in grades)
+                total_subjects = grades.count()
+                average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
+                
+                context = {
+                    'student': student,
+                    'grades': grades,
+                    'fees': fees,
+                    'message': f'✅ Report for {student.first_name} {student.last_name}',
+                    'total_subjects': total_subjects,
+                    'total_score': total_score,
+                    'average': average,
+                }
             except Student.DoesNotExist:
-                message = '❌ No student found with that phone number'
+                context['message'] = '❌ No student found with that phone number'
+        else:
+            context['message'] = '❌ Please enter a phone number'
     
-    context = {
-        'student': student,
-        'grades': grades,
-        'fees': fees,
-        'message': message,
-        'total_subjects': grades.count(),
-        'total_score': sum([g.score for g in grades]) if grades else 0,
-        'average': round(sum([g.score for g in grades]) / grades.count(), 2) if grades.count() > 0 else 0,
-    }
     return render(request, 'parent/dashboard.html', context)
 
 @login_required
