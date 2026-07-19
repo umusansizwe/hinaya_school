@@ -41,6 +41,3 @@ urlpatterns = [
     path('superadmin/', views.admin_dashboard, name='admin_dashboard'),
     path('superadmin/update_profile/', views.update_school_profile, name='update_school_profile'),
 ]
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-    
