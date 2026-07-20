@@ -1,7 +1,10 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.db.models import Sum
+from django.http import HttpResponse
+from django.contrib.auth.models import User, Group
 from .models import *
 
 def login_view(request):
@@ -56,8 +59,6 @@ def dashboard(request):
     else:
         messages.error(request, 'No role assigned to your account.')
         return redirect('login')
-
-# ========== HEADMASTER DASHBOARD ==========
 
 @login_required
 def headmaster_dashboard(request):
@@ -118,7 +119,6 @@ def headmaster_buses(request):
     buses = SchoolBus.objects.all()
     return render(request, 'headmaster/buses.html', {'buses': buses})
 
-# ========== STUDENT REPORT ==========
 @login_required
 def view_student_report(request, student_id):
     student = get_object_or_404(Student, id=student_id)
@@ -126,16 +126,12 @@ def view_student_report(request, student_id):
     fees = Fee.objects.filter(student=student)
     school_profile = SchoolProfile.objects.first()
     
-    # Hesabu total na average
     total_score = 0
     for grade in grades:
         total_score += grade.score
     
     total_subjects = grades.count()
-    if total_subjects > 0:
-        average = round(total_score / total_subjects, 2)
-    else:
-        average = 0
+    average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
     
     context = {
         'student': student,
@@ -148,7 +144,6 @@ def view_student_report(request, student_id):
     }
     return render(request, 'headmaster/student_report.html', context)
 
-# ========== ACADEMIC HISTORY ==========
 @login_required
 def academic_history(request, student_id):
     student = get_object_or_404(Student, id=student_id)
@@ -166,10 +161,7 @@ def academic_history(request, student_id):
         total_score += grade.score
     
     total_subjects = grades.count()
-    if total_subjects > 0:
-        average = round(total_score / total_subjects, 2)
-    else:
-        average = 0
+    average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
     
     context = {
         'student': student,
@@ -182,8 +174,6 @@ def academic_history(request, student_id):
         'average': average,
     }
     return render(request, 'headmaster/academic_history.html', context)
-
-# ========== ADD / DELETE STUDENT ==========
 
 @login_required
 def add_student(request):
@@ -227,8 +217,6 @@ def delete_student(request, student_id):
     
     return render(request, 'headmaster/delete_student.html', {'student': student})
 
-# ========== PROMOTE STUDENTS ==========
-
 @login_required
 def promote_students(request):
     if request.method == 'POST':
@@ -251,8 +239,6 @@ def promote_students(request):
     
     classes = Class.objects.all()
     return render(request, 'headmaster/promote_students.html', {'classes': classes})
-
-# ========== ADD / DELETE TEACHER ==========
 
 @login_required
 def add_teacher(request):
@@ -312,17 +298,14 @@ def add_teacher(request):
 
 @login_required
 def delete_teacher(request, teacher_id):
-    try:
-        teacher = Teacher.objects.get(id=teacher_id)
+    teacher = get_object_or_404(Teacher, id=teacher_id)
+    if request.method == 'POST':
         name = f"{teacher.user.first_name} {teacher.user.last_name}"
-        teacher.user.delete()  # Hii inafuta user na teacher
-        messages.success(request, f'✅ Teacher {name} deleted successfully!')
-    except Teacher.DoesNotExist:
-        messages.error(request, 'Teacher not found!')
+        teacher.user.delete()
+        messages.success(request, f'Teacher {name} deleted successfully!')
+        return redirect('headmaster_teachers')
     
-    return redirect('headmaster_teachers')
-
-# ========== ADD / DELETE BUS ==========
+    return render(request, 'headmaster/delete_teacher.html', {'teacher': teacher})
 
 @login_required
 def add_bus(request):
@@ -357,8 +340,6 @@ def delete_bus(request, bus_id):
     
     return render(request, 'headmaster/delete_bus.html', {'bus': bus})
 
-# ========== ACCOUNTANT DASHBOARD ==========
-
 @login_required
 def accountant_dashboard(request):
     all_students = Student.objects.filter(is_active=True)
@@ -373,9 +354,17 @@ def accountant_dashboard(request):
                 defaults={'total_fee': 0, 'amount_paid': 0}
             )
     
+    debtors = Fee.objects.filter(balance__gt=0).select_related('student')
+    completed = Fee.objects.filter(is_completed=True).select_related('student')
+    total_debt = Fee.objects.aggregate(total=Sum('balance'))['total'] or 0
+    
     context = {
         'all_students': all_students,
-        'total_students': all_students.count(),
+        'debtors': debtors,
+        'completed': completed,
+        'total_debt': total_debt,
+        'debtor_count': debtors.count(),
+        'completed_count': completed.count(),
     }
     return render(request, 'accountant/dashboard.html', context)
 
@@ -386,7 +375,7 @@ def add_payment(request):
         amount = request.POST.get('amount')
         
         try:
-            fee = Fee.objects.get(id=fee_id)
+            fee = get_object_or_404(Fee, id=fee_id)
             from decimal import Decimal
             amount = Decimal(str(amount))
             
@@ -400,7 +389,7 @@ def add_payment(request):
                     fee.is_completed = False
                 
                 fee.save()
-                messages.success(request, f'✅ Payment of {amount} added for {fee.student.first_name}. Balance: {fee.balance}')
+                messages.success(request, f'✅ Payment of {amount} added!')
             else:
                 messages.error(request, 'Amount must be greater than zero.')
         except Exception as e:
@@ -408,9 +397,34 @@ def add_payment(request):
         
         return redirect('accountant_dashboard')
     
-    return redirect('accountant_dashboard')
+    fees = Fee.objects.filter(balance__gt=0).select_related('student', 'term')
+    return render(request, 'accountant/add_payment.html', {'fees': fees})
 
-# ========== TEACHER DASHBOARD ==========
+@login_required
+def set_fee(request):
+    if request.method == 'POST':
+        fee_id = request.POST.get('fee_id')
+        total_fee = request.POST.get('total_fee')
+        
+        try:
+            fee = get_object_or_404(Fee, id=fee_id)
+            from decimal import Decimal
+            fee.total_fee = Decimal(str(total_fee))
+            fee.balance = fee.total_fee - fee.amount_paid
+            
+            if fee.balance <= 0:
+                fee.is_completed = True
+            else:
+                fee.is_completed = False
+            
+            fee.save()
+            messages.success(request, f'✅ Fee set to {total_fee}')
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
+        
+        return redirect('accountant_dashboard')
+    
+    return redirect('accountant_dashboard')
 
 @login_required
 def teacher_dashboard(request):
@@ -467,7 +481,7 @@ def add_marks(request):
                         'remarks': 'Excellent' if score >= 80 else 'Good' if score >= 50 else 'Needs Improvement'
                     }
                 )
-                messages.success(request, f'Marks for {student.first_name} {student.last_name} added successfully!')
+                messages.success(request, f'Marks for {student.first_name} {student.last_name} added!')
             else:
                 messages.error(request, 'Score must be between 0 and 100.')
         except (ValueError, TypeError):
@@ -487,62 +501,48 @@ def add_marks(request):
     }
     return render(request, 'teacher/add_marks.html', context)
 
-# ========== PARENT DASHBOARD ==========
-
 @login_required
 def parent_dashboard(request):
-    context = {
-        'student': None,
-        'grades': [],
-        'fees': [],
-        'message': '',
-        'total_subjects': 0,
-        'total_score': 0,
-        'average': 0,
-    }
+    student = None
+    grades = []
+    fees = []
+    message = ''
     
     if request.method == 'POST':
-        parent_phone = request.POST.get('parent_phone', '').strip()
+        parent_phone = request.POST.get('parent_phone')
         
         if parent_phone:
             try:
                 student = Student.objects.get(parent_phone=parent_phone)
                 grades = Grade.objects.filter(student=student)
                 fees = Fee.objects.filter(student=student)
-                
-                total_score = sum(grade.score for grade in grades)
-                total_subjects = grades.count()
-                average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
-                
-                context = {
-                    'student': student,
-                    'grades': grades,
-                    'fees': fees,
-                    'message': f'✅ Report for {student.first_name} {student.last_name}',
-                    'total_subjects': total_subjects,
-                    'total_score': total_score,
-                    'average': average,
-                }
+                message = f'✅ Report for {student.first_name} {student.last_name}'
             except Student.DoesNotExist:
-                context['message'] = '❌ No student found with that phone number'
-        else:
-            context['message'] = '❌ Please enter a phone number'
+                message = '❌ No student found with that phone number'
     
+    context = {
+        'student': student,
+        'grades': grades,
+        'fees': fees,
+        'message': message,
+        'total_subjects': grades.count(),
+        'total_score': sum([g.score for g in grades]) if grades else 0,
+        'average': round(sum([g.score for g in grades]) / grades.count(), 2) if grades.count() > 0 else 0,
+    }
     return render(request, 'parent/dashboard.html', context)
 
 @login_required
 def send_message(request):
     try:
-        student = Student.objects.get(parent_email=request.user.email)
+        student = Student.objects.get(parent_phone=request.user.username)
     except Student.DoesNotExist:
-        messages.error(request, 'No student linked to your email.')
-        return redirect('parent_dashboard')
+        student = None
     
     if request.method == 'POST':
         subject = request.POST.get('subject')
         message_text = request.POST.get('message')
         
-        if subject and message_text:
+        if subject and message_text and student:
             Message.objects.create(
                 parent=student,
                 subject=subject,
@@ -555,8 +555,6 @@ def send_message(request):
         return redirect('parent_dashboard')
     
     return render(request, 'parent/send_message.html', {'student': student})
-
-# ========== ADMIN DASHBOARD ==========
 
 @login_required
 def admin_dashboard(request):
@@ -577,50 +575,16 @@ def update_school_profile(request):
         profile = SchoolProfile()
     
     if request.method == 'POST':
-        school_name = request.POST.get('school_name')
-        address = request.POST.get('address')
-        location = request.POST.get('location')
-        phone = request.POST.get('phone')
-        email = request.POST.get('email')
-        bank_name = request.POST.get('bank_name')
-        bank_account = request.POST.get('bank_account')
-        
-        profile.school_name = school_name
-        profile.address = address
-        profile.location = location
-        profile.phone = phone
-        profile.email = email
-        profile.bank_name = bank_name
-        profile.bank_account = bank_account
+        profile.school_name = request.POST.get('school_name')
+        profile.address = request.POST.get('address')
+        profile.location = request.POST.get('location')
+        profile.phone = request.POST.get('phone')
+        profile.email = request.POST.get('email')
+        profile.bank_name = request.POST.get('bank_name')
+        profile.bank_account = request.POST.get('bank_account')
         profile.save()
         
         messages.success(request, 'School profile updated successfully!')
         return redirect('admin_dashboard')
     
     return render(request, 'admin/update_profile.html', {'profile': profile})
-@login_required
-def set_fee(request):
-    if request.method == 'POST':
-        fee_id = request.POST.get('fee_id')
-        total_fee = request.POST.get('total_fee')
-        
-        try:
-            fee = Fee.objects.get(id=fee_id)
-            # Badilisha kuwa Decimal
-            from decimal import Decimal
-            fee.total_fee = Decimal(str(total_fee))
-            fee.balance = fee.total_fee - fee.amount_paid
-            
-            if fee.balance <= 0:
-                fee.is_completed = True
-            else:
-                fee.is_completed = False
-            
-            fee.save()
-            messages.success(request, f'✅ Fee set to {total_fee} for {fee.student.first_name}')
-        except Exception as e:
-            messages.error(request, f'Error: {str(e)}')
-        
-        return redirect('accountant_dashboard')
-    
-    return redirect('accountant_dashboard')
