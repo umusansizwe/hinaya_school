@@ -1,17 +1,8 @@
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Sum
-from django.http import HttpResponse
-from django.contrib.auth.models import User, Group
 from .models import *
-import traceback
-from django.shortcuts import get_object_or_404
-from .models import Student, Grade, Fee, SchoolProfile
-from .models import Fee
-
-# ========== LOGIN & LOGOUT ==========
 
 def login_view(request):
     profile = SchoolProfile.objects.first()
