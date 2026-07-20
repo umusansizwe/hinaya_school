@@ -519,6 +519,10 @@ def parent_dashboard(request):
                 message = f'✅ Report for {student.first_name} {student.last_name}'
             except Student.DoesNotExist:
                 message = '❌ No student found with that phone number'
+            except Exception as e:
+                message = f'❌ Error: {str(e)}'
+        else:
+            message = '❌ Please enter a phone number'
     
     context = {
         'student': student,
