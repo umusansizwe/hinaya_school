@@ -6,6 +6,7 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.contrib.auth.models import User, Group
 from .models import *
+from decimal import Decimal
 
 def login_view(request):
     profile = SchoolProfile.objects.first()
@@ -287,31 +288,58 @@ def accountant_dashboard(request):
     return render(request, 'accountant/dashboard.html', context)
 
 @login_required
-def add_payment(request):
-    if request.method == 'POST':
-        fee = get_object_or_404(Fee, id=request.POST.get('fee_id'))
-        amount = float(request.POST.get('amount'))
-        if amount > 0:
-            fee.amount_paid += amount
-            fee.balance = fee.total_fee - fee.amount_paid
-            if fee.balance <= 0:
-                fee.is_completed = True
-            fee.save()
-            messages.success(request, f'Payment of {amount} added!')
-        return redirect('accountant_dashboard')
-    return render(request, 'accountant/add_payment.html', {'fees': Fee.objects.filter(balance__gt=0)})
-
-@login_required
 def set_fee(request):
     if request.method == 'POST':
-        fee = get_object_or_404(Fee, id=request.POST.get('fee_id'))
-        fee.total_fee = float(request.POST.get('total_fee'))
-        fee.balance = fee.total_fee - fee.amount_paid
-        if fee.balance <= 0:
-            fee.is_completed = True
-        fee.save()
-        messages.success(request, 'Fee set successfully!')
+        fee_id = request.POST.get('fee_id')
+        total_fee = request.POST.get('total_fee')
+        
+        try:
+            fee = get_object_or_404(Fee, id=fee_id)
+            fee.total_fee = Decimal(str(total_fee))
+            fee.balance = fee.total_fee - fee.amount_paid
+            
+            if fee.balance <= 0:
+                fee.is_completed = True
+            else:
+                fee.is_completed = False
+            
+            fee.save()
+            messages.success(request, f'✅ Fee set to {total_fee} for {fee.student.first_name}')
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
+        
         return redirect('accountant_dashboard')
+    
+    return redirect('accountant_dashboard')
+
+@login_required
+def add_payment(request):
+    if request.method == 'POST':
+        fee_id = request.POST.get('fee_id')
+        amount = request.POST.get('amount')
+        
+        try:
+            fee = get_object_or_404(Fee, id=fee_id)
+            amount = Decimal(str(amount))
+            
+            if amount > 0:
+                fee.amount_paid += amount
+                fee.balance = fee.total_fee - fee.amount_paid
+                
+                if fee.balance <= 0:
+                    fee.is_completed = True
+                else:
+                    fee.is_completed = False
+                
+                fee.save()
+                messages.success(request, f'✅ Payment of {amount} added for {fee.student.first_name}')
+            else:
+                messages.error(request, 'Amount must be greater than zero.')
+        except Exception as e:
+            messages.error(request, f'Error: {str(e)}')
+        
+        return redirect('accountant_dashboard')
+    
     return redirect('accountant_dashboard')
 
 @login_required
@@ -366,6 +394,8 @@ def parent_dashboard(request):
     grades = []
     fees = []
     message = ''
+    position = '-'
+    total_students = 0
     
     if request.method == 'POST':
         parent_phone = request.POST.get('parent_phone')
@@ -374,6 +404,38 @@ def parent_dashboard(request):
                 student = Student.objects.get(parent_phone=parent_phone)
                 grades = Grade.objects.filter(student=student)
                 fees = Fee.objects.filter(student=student)
+                
+                # Pata nafasi ya mtoto darasani (position/rank)
+                if student.current_class:
+                    # Wanafunzi wote wa darasa hilo
+                    class_students = Student.objects.filter(
+                        current_class=student.current_class, 
+                        is_active=True
+                    )
+                    total_students = class_students.count()
+                    
+                    # Pata wanafunzi wote na average yao
+                    student_ranks = []
+                    for s in class_students:
+                        s_grades = Grade.objects.filter(student=s)
+                        s_avg = 0
+                        if s_grades:
+                            s_total = sum([g.score for g in s_grades])
+                            s_avg = s_total / s_grades.count()
+                        student_ranks.append({
+                            'student': s,
+                            'average': s_avg
+                        })
+                    
+                    # Panga kwa average (kubwa hadi ndogo)
+                    student_ranks.sort(key=lambda x: x['average'], reverse=True)
+                    
+                    # Tafuta nafasi ya mtoto
+                    for idx, item in enumerate(student_ranks, 1):
+                        if item['student'].id == student.id:
+                            position = idx
+                            break
+                
                 message = f'✅ Report for {student.first_name} {student.last_name}'
             except Student.DoesNotExist:
                 message = '❌ No student found with that phone number'
@@ -390,6 +452,8 @@ def parent_dashboard(request):
         'total_subjects': total_subjects,
         'total_score': total_score,
         'average': average,
+        'position': position,
+        'total_students': total_students,
     })
 
 @login_required
