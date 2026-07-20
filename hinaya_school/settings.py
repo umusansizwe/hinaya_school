@@ -7,7 +7,7 @@ SECRET_KEY = 'django-insecure-abc123xyz789'
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['*', 'hinayaschool-production.up.railway.app', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -69,18 +69,9 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/dashboard'
-
-CSRF_TRUSTED_ORIGINS = [
-    'https://hinayaschool-production.up.railway.app',
-    'http://hinayaschool-production.up.railway.app',
-]
