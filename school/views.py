@@ -6,6 +6,7 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.contrib.auth.models import User, Group
 from .models import *
+import traceback
 
 def login_view(request):
     profile = SchoolProfile.objects.first()
@@ -503,37 +504,49 @@ def add_marks(request):
 
 @login_required
 def parent_dashboard(request):
-    student = None
-    grades = []
-    fees = []
-    message = ''
-    
-    if request.method == 'POST':
-        parent_phone = request.POST.get('parent_phone')
+    try:
+        student = None
+        grades = []
+        fees = []
+        message = ''
         
-        if parent_phone:
-            try:
-                student = Student.objects.get(parent_phone=parent_phone)
-                grades = Grade.objects.filter(student=student)
-                fees = Fee.objects.filter(student=student)
-                message = f'✅ Report for {student.first_name} {student.last_name}'
-            except Student.DoesNotExist:
-                message = '❌ No student found with that phone number'
-            except Exception as e:
-                message = f'❌ Error: {str(e)}'
-        else:
-            message = '❌ Please enter a phone number'
+        if request.method == 'POST':
+            parent_phone = request.POST.get('parent_phone')
+            
+            if parent_phone:
+                try:
+                    student = Student.objects.get(parent_phone=parent_phone)
+                    grades = Grade.objects.filter(student=student)
+                    fees = Fee.objects.filter(student=student)
+                    message = f'✅ Report for {student.first_name} {student.last_name}'
+                except Student.DoesNotExist:
+                    message = '❌ No student found with that phone number'
+            else:
+                message = '❌ Please enter a phone number'
+        
+        context = {
+            'student': student,
+            'grades': grades,
+            'fees': fees,
+            'message': message,
+            'total_subjects': grades.count(),
+            'total_score': sum([g.score for g in grades]) if grades else 0,
+            'average': round(sum([g.score for g in grades]) / grades.count(), 2) if grades.count() > 0 else 0,
+        }
+        return render(request, 'parent/dashboard.html', context)
     
-    context = {
-        'student': student,
-        'grades': grades,
-        'fees': fees,
-        'message': message,
-        'total_subjects': grades.count(),
-        'total_score': sum([g.score for g in grades]) if grades else 0,
-        'average': round(sum([g.score for g in grades]) / grades.count(), 2) if grades.count() > 0 else 0,
-    }
-    return render(request, 'parent/dashboard.html', context)
+    except Exception as e:
+        # Onyesha kosa halisi kwenye browser
+        return HttpResponse(f"""
+        <html>
+        <head><title>Error</title></head>
+        <body>
+            <h1>Parent Dashboard Error</h1>
+            <pre>{traceback.format_exc()}</pre>
+            <p><a href="/logout/">Logout</a></p>
+        </body>
+        </html>
+        """)
 
 @login_required
 def send_message(request):
