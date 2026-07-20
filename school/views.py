@@ -524,16 +524,37 @@ def parent_dashboard(request):
             else:
                 message = '❌ Please enter a phone number'
         
+        # Hesabu total score
+        total_score = 0
+        for grade in grades:
+            total_score += grade.score
+        
+        total_subjects = len(grades)  # Badilisha hapa - tumia len() badala ya count()
+        average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
+        
         context = {
             'student': student,
             'grades': grades,
             'fees': fees,
             'message': message,
-            'total_subjects': grades.count(),
-            'total_score': sum([g.score for g in grades]) if grades else 0,
-            'average': round(sum([g.score for g in grades]) / grades.count(), 2) if grades.count() > 0 else 0,
+            'total_subjects': total_subjects,
+            'total_score': total_score,
+            'average': average,
         }
         return render(request, 'parent/dashboard.html', context)
+    
+    except Exception as e:
+        import traceback
+        return HttpResponse(f"""
+        <html>
+        <head><title>Error</title></head>
+        <body>
+            <h1>Parent Dashboard Error</h1>
+            <pre>{traceback.format_exc()}</pre>
+            <p><a href="/logout/">Logout</a></p>
+        </body>
+        </html>
+        """)
     
     except Exception as e:
         # Onyesha kosa halisi kwenye browser
