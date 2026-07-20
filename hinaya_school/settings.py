@@ -11,6 +11,7 @@ ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://hinayaschool-production.up.railway.app',
+    'https://hinayaschool-production-8930.up.railway.app',
 ]
 
 INSTALLED_APPS = [
