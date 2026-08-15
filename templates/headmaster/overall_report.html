@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Overall Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+</head>
+<body>
+    <nav class="navbar navbar-dark bg-primary">
+        <div class="container-fluid">
+            <span class="navbar-brand">🏫 HINAYA - Overall Report</span>
+            <a href="/headmaster/" class="btn btn-light btn-sm">Back</a>
+            <a href="/logout/" class="btn btn-danger btn-sm">Logout</a>
+        </div>
+    </nav>
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4>📊 Overall School Report</h4>
+            </div>
+            <div class="card-body">
+                <!-- Filter -->
+                <form method="get" class="row mb-4">
+                    <div class="col-md-4">
+                        <label>Select Term</label>
+                        <select name="term_id" class="form-control" onchange="this.form.submit()">
+                            <option value="">All Terms</option>
+                            {% for term in terms %}
+                            <option value="{{ term.id }}" {% if selected_term == term.id|stringformat:"s" %}selected{% endif %}>
+                                {{ term.name }} - {{ term.year }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <a href="/headmaster/overall_report/" class="btn btn-secondary">Clear Filter</a>
+                    </div>
+                </form>
+
+                <!-- Summary Stats -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="alert alert-info text-center">
+                            <h5>Total Students</h5>
+                            <h2>{{ total_students }}</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="alert alert-success text-center">
+                            <h5>Grand Total</h5>
+                            <h2>{{ grand_total|floatformat:2 }}</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="alert alert-warning text-center">
+                            <h5>Grand Average</h5>
+                            <h2>{{ grand_average|floatformat:2 }}%</h2>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="alert alert-danger text-center">
+                            <h5>Total Debt</h5>
+                            <h2>TSh {{ total_balance|floatformat:2 }}</h2>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Class Reports -->
+                <h5>Class Performance</h5>
+                <table class="table table-bordered table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Class</th>
+                            <th>Students</th>
+                            <th>Total Score</th>
+                            <th>Average</th>
+                            <th>Total Debt</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for report in class_reports %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td><strong>{{ report.class.name }}</strong></td>
+                            <td>{{ report.count }}</td>
+                            <td>{{ report.total|floatformat:2 }}</td>
+                            <td>{{ report.average|floatformat:2 }}%</td>
+                            <td class="{% if report.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                TSh {{ report.balance|floatformat:2 }}
+                            </td>
+                            <td>
+                                <a href="/headmaster/class_report/{{ report.class.id }}/" class="btn btn-info btn-sm">View</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7" class="text-center">No classes found</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <button onclick="window.print()" class="btn btn-primary mt-3">🖨️ Print Report</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

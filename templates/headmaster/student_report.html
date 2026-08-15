@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Report</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-4">
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4>📄 Student Report</h4>
+            </div>
+            <div class="card-body">
+                <h5>{{ student.first_name }} {{ student.last_name }}</h5>
+                <p><strong>Class:</strong> {{ student.current_class }}</p>
+                <p><strong>Parent:</strong> {{ student.parent_name }}</p>
+                <hr>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Subject</th>
+                            <th>Score</th>
+                            <th>Grade</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for grade in grades %}
+                        <tr>
+                            <td>{{ grade.subject.name }}</td>
+                            <td>{{ grade.score }}</td>
+                            <td>
+                                {% if grade.score >= 80 %}A
+                                {% elif grade.score >= 60 %}B
+                                {% elif grade.score >= 50 %}C
+                                {% elif grade.score >= 40 %}D
+                                {% else %}F{% endif %}
+                            </td>
+                            <td>{{ grade.remarks }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4">No grades available</td></tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th>Summary</th>
+                            <th>{{ total_score }}</th>
+                            <th>{{ average }}%</th>
+                            <th></th>
+                        </tr>
+                    </tfoot>
+                </table>
+                <h5>Fee Summary</h5>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Term</th>
+                            <th>Total Fee</th>
+                            <th>Paid</th>
+                            <th>Balance</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for fee in fees %}
+                        <tr>
+                            <td>{{ fee.term.name }}</td>
+                            <td>{{ fee.total_fee|floatformat:2 }}</td>
+                            <td>{{ fee.amount_paid|floatformat:2 }}</td>
+                            <td class="{% if fee.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                                {{ fee.balance|floatformat:2 }}
+                            </td>
+                            <td>{% if fee.is_completed %}✅ Paid{% else %}❌ Pending{% endif %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5">No fee records</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <a href="/headmaster/students/" class="btn btn-secondary">Back</a>
+                <button onclick="window.print()" class="btn btn-primary">Print</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
