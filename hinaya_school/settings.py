@@ -5,7 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-hinaya-key-2024'
 
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 
@@ -81,5 +81,6 @@ LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/dashboard'
 
 CSRF_TRUSTED_ORIGINS = [
-    'hinayaschool-production.up.railway.app'
+    'https://*.railway.app',
+    'https://*.up.railway.app',
 ]
