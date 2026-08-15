@@ -1,0 +1,10 @@
+{
+    "build": {
+        "build": "NIXPACKS"
+    },
+    "deploy": {
+        "startCommand": "gunicorn hinaya_school.wsgi:application",
+        "healthcheckPath": "/",
+        "restartPolicyType": "ON_FAILURE"
+    }
+}
