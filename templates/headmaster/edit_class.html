@@ -19,17 +19,25 @@
                 <h4><i class="bi bi-pencil"></i> Edit Class</h4>
             </div>
             <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-success">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
+                
                 <form method="post">
                     {% csrf_token %}
                     <div class="mb-3">
-                        <label>Class Name</label>
+                        <label class="form-label">Class Name</label>
                         <input type="text" name="name" class="form-control" value="{{ class_obj.name }}" required>
                     </div>
                     <div class="mb-3">
-                        <label>Academic Year</label>
+                        <label class="form-label">Academic Year</label>
                         <input type="text" name="academic_year" class="form-control" value="{{ class_obj.academic_year }}" required>
                     </div>
-                    <button type="submit" class="btn btn-warning">Update Class</button>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-save"></i> Update Class
+                    </button>
                     <a href="/headmaster/classes/" class="btn btn-secondary">Cancel</a>
                 </form>
             </div>
