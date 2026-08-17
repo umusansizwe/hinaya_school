@@ -741,6 +741,9 @@ def parent_dashboard(request):
     message = ''
     position = '-'
     total_students = 0
+    total_score = 0
+    total_subjects = 0
+    average = 0
     
     if request.method == 'POST':
         parent_phone = request.POST.get('parent_phone')
@@ -768,11 +771,12 @@ def parent_dashboard(request):
             except Student.DoesNotExist:
                 message = 'No student found with that phone number'
     
-    total_score = sum([g.score for g in grades]) if grades else 0
-    total_subjects = grades.count()
-    average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
+    if grades:
+        total_score = sum([g.score for g in grades])
+        total_subjects = len(grades)
+        average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
     
-    return render(request, 'parent/dashboard.html', {
+    context = {
         'student': student,
         'grades': grades,
         'fees': fees,
@@ -783,7 +787,8 @@ def parent_dashboard(request):
         'position': position,
         'total_students': total_students,
         'user': request.user,
-    })
+    }
+    return render(request, 'parent/dashboard.html', context)
 
 # ========== ADMIN ==========
 
