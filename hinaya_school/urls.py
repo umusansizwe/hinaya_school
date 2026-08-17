@@ -54,6 +54,7 @@ path('headmaster/settings/', views.headmaster_settings, name='headmaster_setting
     # Teacher
     path('teacher/', views.teacher_dashboard, name='teacher_dashboard'),
     path('teacher/add_marks/', views.add_marks, name='add_marks'),
+    path('teacher/post_marks/<int:class_id>/', views.post_marks, name='post_marks'),
     
     # Parent
     path('parent/', views.parent_dashboard, name='parent_dashboard'),
