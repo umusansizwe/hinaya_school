@@ -638,19 +638,21 @@ def post_marks(request, class_id):
         subjects = teacher.subjects.filter(is_active=True)
         terms = AcademicTerm.objects.filter(is_active=True)
         
+        # Get selected subject and term from GET or POST
+        selected_subject = request.GET.get('subject_id') or request.POST.get('subject_id')
+        selected_term = request.GET.get('term_id') or request.POST.get('term_id')
+        
+        # Handle POST (saving marks)
         if request.method == 'POST':
-            subject_id = request.POST.get('subject_id')
-            term_id = request.POST.get('term_id')
-            
-            if subject_id and term_id:
-                subject = get_object_or_404(Subject, id=subject_id)
-                term = get_object_or_404(AcademicTerm, id=term_id)
+            if selected_subject and selected_term:
+                subject = get_object_or_404(Subject, id=selected_subject)
+                term = get_object_or_404(AcademicTerm, id=selected_term)
                 
                 for student in students:
                     score_key = f'score_{student.id}'
                     if score_key in request.POST:
                         score_value = request.POST.get(score_key)
-                        if score_value and score_value != '':
+                        if score_value and score_value.strip():
                             try:
                                 score = float(score_value)
                                 if 0 <= score <= 100:
@@ -667,19 +669,20 @@ def post_marks(request, class_id):
                             except ValueError:
                                 pass
                 
-                messages.success(request, f'Marks posted successfully for {class_obj.name}!')
+                messages.success(request, f'✅ Marks posted successfully for {class_obj.name}!')
                 return redirect('teacher_dashboard')
             else:
                 messages.error(request, 'Please select subject and term!')
         
-        # Pata marks zilizopo
+        # Get existing marks for display
         existing_marks = {}
-        subject_id = request.GET.get('subject_id')
-        term_id = request.GET.get('term_id')
-        
-        if subject_id and term_id:
+        if selected_subject and selected_term:
             for student in students:
-                grade = Grade.objects.filter(student=student, subject_id=subject_id, term_id=term_id).first()
+                grade = Grade.objects.filter(
+                    student=student, 
+                    subject_id=selected_subject, 
+                    term_id=selected_term
+                ).first()
                 if grade:
                     existing_marks[student.id] = grade.score
         
@@ -689,8 +692,8 @@ def post_marks(request, class_id):
             'subjects': subjects,
             'terms': terms,
             'existing_marks': existing_marks,
-            'selected_subject': subject_id or '',
-            'selected_term': term_id or '',
+            'selected_subject': selected_subject or '',
+            'selected_term': selected_term or '',
         }
         return render(request, 'teacher/post_marks.html', context)
     
