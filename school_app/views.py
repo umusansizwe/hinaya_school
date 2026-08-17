@@ -628,6 +628,67 @@ def add_marks(request):
         'subjects': subjects,
         'terms': terms,
     })
+@login_required
+def post_marks(request, class_id):
+    teacher = get_object_or_404(Teacher, user=request.user)
+    class_obj = get_object_or_404(Class, id=class_id)
+    students = Student.objects.filter(current_class=class_obj, is_active=True)
+    subjects = teacher.subjects.filter(is_active=True)
+    terms = AcademicTerm.objects.filter(is_active=True)
+    
+    if request.method == 'POST':
+        subject_id = request.POST.get('subject_id')
+        term_id = request.POST.get('term_id')
+        
+        if subject_id and term_id:
+            subject = get_object_or_404(Subject, id=subject_id)
+            term = get_object_or_404(AcademicTerm, id=term_id)
+            
+            for student in students:
+                score_key = f'score_{student.id}'
+                if score_key in request.POST and request.POST[score_key] != '':
+                    score = request.POST[score_key]
+                    try:
+                        score = float(score)
+                        if 0 <= score <= 100:
+                            grade, created = Grade.objects.update_or_create(
+                                student=student,
+                                subject=subject,
+                                term=term,
+                                defaults={
+                                    'teacher': teacher,
+                                    'score': score,
+                                    'remarks': 'Excellent' if score >= 80 else 'Good' if score >= 50 else 'Needs Improvement'
+                                }
+                            )
+                    except ValueError:
+                        pass
+            
+            messages.success(request, f'Marks posted successfully for {class_obj.name}!')
+            return redirect('teacher_dashboard')
+        else:
+            messages.error(request, 'Please select subject and term!')
+    
+    # Pata marks zilizopo kwa ajili ya kuonyesha
+    existing_marks = {}
+    if request.GET.get('subject_id') and request.GET.get('term_id'):
+        subject_id = request.GET.get('subject_id')
+        term_id = request.GET.get('term_id')
+        for student in students:
+            grade = Grade.objects.filter(student=student, subject_id=subject_id, term_id=term_id).first()
+            if grade:
+                existing_marks[student.id] = grade.score
+    
+    context = {
+        'class_obj': class_obj,
+        'students': students,
+        'subjects': subjects,
+        'terms': terms,
+        'existing_marks': existing_marks,
+        'selected_subject': request.GET.get('subject_id', ''),
+        'selected_term': request.GET.get('term_id', ''),
+    }
+    return render(request, 'teacher/post_marks.html', context)
 
 # ========== PARENT ==========
 

@@ -39,7 +39,9 @@
                                     {% for class in classes %}
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         {{ class.name }}
-                                        <a href="/teacher/add_marks/?class_id={{ class.id }}" class="btn btn-primary btn-sm">Add Marks</a>
+                                        <a href="/teacher/post_marks/{{class.id}}/" class="btn btn-primary btn-sm">
+                                            <i class="bi bi-pencil"></i> Post Marks
+                                        </a>
                                     </li>
                                     {% endfor %}
                                 </ul>
