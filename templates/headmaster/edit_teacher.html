@@ -1,22 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Edit Student</title>
+    <title>Edit Teacher</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
 </head>
 <body>
     <nav class="navbar navbar-dark bg-primary">
         <div class="container-fluid">
-            <span class="navbar-brand">🏫 HINAYA - Edit Student</span>
-            <a href="/headmaster/students/" class="btn btn-light btn-sm">Back</a>
+            <span class="navbar-brand">🏫 HINAYA - Edit Teacher</span>
+            <a href="/headmaster/teachers/" class="btn btn-light btn-sm">Back</a>
             <a href="/logout/" class="btn btn-danger btn-sm">Logout</a>
         </div>
     </nav>
     <div class="container mt-4">
         <div class="card">
             <div class="card-header bg-warning text-dark">
-                <h4><i class="bi bi-pencil"></i> Edit Student</h4>
+                <h4><i class="bi bi-pencil"></i> Edit Teacher</h4>
             </div>
             <div class="card-body">
                 <form method="post">
@@ -24,59 +24,56 @@
                     <div class="row">
                         <div class="col-md-6">
                             <label>First Name</label>
-                            <input type="text" name="first_name" class="form-control" value="{{ student.first_name }}" required>
+                            <input type="text" name="first_name" class="form-control" value="{{ teacher.user.first_name }}" required>
                         </div>
                         <div class="col-md-6">
                             <label>Last Name</label>
-                            <input type="text" name="last_name" class="form-control" value="{{ student.last_name }}" required>
+                            <input type="text" name="last_name" class="form-control" value="{{ teacher.user.last_name }}" required>
+                        </div>
+                    </div>
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <label>Email</label>
+                            <input type="email" name="email" class="form-control" value="{{ teacher.user.email }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label>Phone</label>
+                            <input type="text" name="phone" class="form-control" value="{{ teacher.phone }}" required>
                         </div>
                     </div>
                     <div class="row mt-2">
                         <div class="col-md-6">
                             <label>Gender</label>
                             <select name="gender" class="form-control">
-                                <option value="M" {% if student.gender == 'M' %}selected{% endif %}>Male</option>
-                                <option value="F" {% if student.gender == 'F' %}selected{% endif %}>Female</option>
+                                <option value="M" {% if teacher.gender == 'M' %}selected{% endif %}>Male</option>
+                                <option value="F" {% if teacher.gender == 'F' %}selected{% endif %}>Female</option>
                             </select>
                         </div>
                         <div class="col-md-6">
-                            <label>Date of Birth</label>
-                            <input type="date" name="date_of_birth" class="form-control" value="{{ student.date_of_birth|date:'Y-m-d' }}" required>
-                        </div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col-md-6">
-                            <label>Parent Name</label>
-                            <input type="text" name="parent_name" class="form-control" value="{{ student.parent_name }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label>Parent Phone</label>
-                            <input type="text" name="parent_phone" class="form-control" value="{{ student.parent_phone }}" required>
-                        </div>
-                    </div>
-                    <div class="row mt-2">
-                        <div class="col-md-6">
-                            <label>Parent Email</label>
-                            <input type="email" name="parent_email" class="form-control" value="{{ student.parent_email }}">
-                        </div>
-                        <div class="col-md-6">
-                            <label>Class</label>
-                            <select name="current_class" class="form-control">
-                                <option value="">Select Class</option>
+                            <label>Assigned Classes</label>
+                            <select name="assigned_classes" class="form-control" multiple>
                                 {% for class in classes %}
-                                    <option value="{{ class.id }}" {% if student.current_class.id == class.id %}selected{% endif %}>
+                                    <option value="{{ class.id }}" {% if class in teacher.assigned_classes.all %}selected{% endif %}>
                                         {{ class.name }}
                                     </option>
                                 {% endfor %}
                             </select>
+                            <small class="text-muted">Hold Ctrl to select multiple</small>
                         </div>
                     </div>
                     <div class="mt-2">
-                        <label>Address</label>
-                        <textarea name="address" class="form-control" rows="2">{{ student.address }}</textarea>
+                        <label>Subjects</label>
+                        <select name="subjects" class="form-control" multiple>
+                            {% for subject in subjects %}
+                                <option value="{{ subject.id }}" {% if subject in teacher.subjects.all %}selected{% endif %}>
+                                    {{ subject.name }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                        <small class="text-muted">Hold Ctrl to select multiple</small>
                     </div>
-                    <button type="submit" class="btn btn-warning mt-3">Update Student</button>
-                    <a href="/headmaster/students/" class="btn btn-secondary mt-3">Cancel</a>
+                    <button type="submit" class="btn btn-warning mt-3">Update Teacher</button>
+                    <a href="/headmaster/teachers/" class="btn btn-secondary mt-3">Cancel</a>
                 </form>
             </div>
         </div>

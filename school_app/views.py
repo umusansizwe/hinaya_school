@@ -336,6 +336,7 @@ def add_staff(request):
 @login_required
 def edit_staff(request, staff_id):
     staff = get_object_or_404(Staff, id=staff_id)
+    
     if request.method == 'POST':
         staff.name = request.POST.get('name')
         staff.staff_type = request.POST.get('staff_type')
@@ -343,9 +344,13 @@ def edit_staff(request, staff_id):
         staff.gender = request.POST.get('gender')
         staff.salary = request.POST.get('salary') or 0
         staff.save()
-        messages.success(request, 'Staff updated!')
+        messages.success(request, f'Staff {staff.name} updated successfully!')
         return redirect('headmaster_staff')
-    return render(request, 'headmaster/edit_staff.html', {'staff': staff})
+    
+    context = {
+        'staff': staff,
+    }
+    return render(request, 'headmaster/edit_staff.html', context)
 
 @login_required
 def delete_staff(request, staff_id):
