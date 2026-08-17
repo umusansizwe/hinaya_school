@@ -41,12 +41,12 @@
                             <td>{{ student.parent_name }}</td>
                             <td>{{ student.parent_phone }}</td>
                             <td>
-                                <a href="headmaster/student_report/{{ student.id }}/" class="btn btn-info btn-sm">
-                                    <i class="bi bi-eye"></i> Report
-                                </a>
-                                <a href="/headmaster/edit_student/{{ student.id }}/" class="btn btn-warning btn-sm">Edit</a>
-                                <a href="/headmaster/delete_student/{{ student.id }}/" class="btn btn-danger btn-sm">Delete</a>
-                            </td>
+    <a href="/headmaster/student_report/{{ student.id }}/" class="btn btn-info btn-sm">
+        <i class="bi bi-eye"></i> Report
+    </a>
+    <a href="/headmaster/edit_student/{{ student.id }}/" class="btn btn-warning btn-sm">Edit</a>
+    <a href="/headmaster/delete_student/{{ student.id }}/" class="btn btn-danger btn-sm">Delete</a>
+</td>
                         </tr>
                         {% empty %}
                         <tr><td colspan="7" class="text-center">No students found</td></tr>

@@ -409,7 +409,6 @@ def student_report(request, student_id):
     fees = Fee.objects.filter(student=student)
     school_profile = SchoolProfile.objects.first()
     
-    # Hesabu total na average
     total_score = 0
     for grade in grades:
         total_score += grade.score
@@ -417,7 +416,7 @@ def student_report(request, student_id):
     total_subjects = grades.count()
     average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
     
-    # Pata nafasi ya mwanafunzi darasani
+    # Position
     position = '-'
     total_students = 0
     if student.current_class:
