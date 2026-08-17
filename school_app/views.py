@@ -507,13 +507,37 @@ def add_fee(request):
 @login_required
 def edit_fee(request, fee_id):
     fee = get_object_or_404(Fee, id=fee_id)
+    
     if request.method == 'POST':
-        fee.total_fee = request.POST.get('total_fee') or 0
-        fee.amount_paid = request.POST.get('amount_paid') or 0
-        fee.save()
-        messages.success(request, 'Fee updated!')
-        return redirect('accountant_dashboard')
-    return render(request, 'accountant/edit_fee.html', {'fee': fee})
+        try:
+            total_fee = request.POST.get('total_fee')
+            amount_paid = request.POST.get('amount_paid')
+            
+            if total_fee is not None:
+                fee.total_fee = Decimal(str(total_fee))
+            if amount_paid is not None:
+                fee.amount_paid = Decimal(str(amount_paid))
+            
+            fee.balance = fee.total_fee - fee.amount_paid
+            
+            if fee.balance <= 0:
+                fee.is_completed = True
+            else:
+                fee.is_completed = False
+            
+            fee.save()
+            messages.success(request, f'✅ Fee updated successfully for {fee.student.first_name}!')
+            return redirect('accountant_dashboard')
+        except Exception as e:
+            messages.error(request, f'❌ Error: {str(e)}')
+            return redirect('accountant_dashboard')
+    
+    context = {
+        'fee': fee,
+        'student': fee.student,
+        'term': fee.term,
+    }
+    return render(request, 'accountant/edit_fee.html', context)
 
 @login_required
 def delete_fee(request, fee_id):
