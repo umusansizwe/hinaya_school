@@ -558,6 +558,7 @@ def teacher_dashboard(request):
             'subjects': subjects,
             'total_classes': classes.count(),
             'total_subjects': subjects.count(),
+            'has_data': classes.exists() or subjects.exists(),
         }
         return render(request, 'teacher/dashboard.html', context)
     
