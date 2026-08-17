@@ -478,20 +478,31 @@ def add_fee(request):
         total_fee = request.POST.get('total_fee')
         
         if student_id and term_id:
-            fee, created = Fee.objects.get_or_create(
-                student_id=student_id,
-                term_id=term_id,
-                defaults={'total_fee': total_fee or 0}
-            )
-            if not created:
-                fee.total_fee = total_fee or 0
-                fee.save()
-            messages.success(request, 'Fee added/updated!')
+            try:
+                fee, created = Fee.objects.get_or_create(
+                    student_id=student_id,
+                    term_id=term_id,
+                    defaults={'total_fee': Decimal(total_fee) if total_fee else 0}
+                )
+                if not created:
+                    fee.total_fee = Decimal(total_fee) if total_fee else 0
+                    fee.save()
+                messages.success(request, 'Fee added/updated successfully!')
+            except Exception as e:
+                messages.error(request, f'Error: {str(e)}')
+        else:
+            messages.error(request, 'Please select student and term.')
+        
         return redirect('accountant_dashboard')
     
     students = Student.objects.filter(is_active=True)
     terms = AcademicTerm.objects.filter(is_active=True)
-    return render(request, 'accountant/add_fee.html', {'students': students, 'terms': terms})
+    
+    context = {
+        'students': students,
+        'terms': terms,
+    }
+    return render(request, 'accountant/add_fee.html', context)
 
 @login_required
 def edit_fee(request, fee_id):
@@ -533,18 +544,26 @@ def add_payment(request):
 @login_required
 def teacher_dashboard(request):
     if not request.user.groups.filter(name='Teacher').exists() and not request.user.is_superuser:
+        messages.error(request, 'Access denied! You are not a teacher.')
         return redirect('dashboard')
     
-    teacher = get_object_or_404(Teacher, user=request.user)
-    classes = teacher.assigned_classes.filter(is_active=True)
-    subjects = teacher.subjects.filter(is_active=True)
+    try:
+        teacher = Teacher.objects.get(user=request.user)
+        classes = teacher.assigned_classes.filter(is_active=True)
+        subjects = teacher.subjects.filter(is_active=True)
+        
+        context = {
+            'teacher': teacher,
+            'classes': classes,
+            'subjects': subjects,
+            'total_classes': classes.count(),
+            'total_subjects': subjects.count(),
+        }
+        return render(request, 'teacher/dashboard.html', context)
     
-    context = {
-        'teacher': teacher,
-        'classes': classes,
-        'subjects': subjects,
-    }
-    return render(request, 'teacher/dashboard.html', context)
+    except Teacher.DoesNotExist:
+        messages.error(request, 'Teacher profile not found. Please contact admin.')
+        return render(request, 'teacher/dashboard.html', {'error': 'Teacher profile not found'})
 
 @login_required
 def add_marks(request):
@@ -590,6 +609,7 @@ def add_marks(request):
 @login_required
 def parent_dashboard(request):
     if not request.user.groups.filter(name='Parent').exists() and not request.user.is_superuser:
+        messages.error(request, 'Access denied!')
         return redirect('dashboard')
     
     student = None
@@ -639,6 +659,7 @@ def parent_dashboard(request):
         'average': average,
         'position': position,
         'total_students': total_students,
+        'user': request.user,
     })
 
 # ========== ADMIN ==========
