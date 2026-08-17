@@ -1,86 +1,259 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Student Report</title>
+    <title>Student Report - {{ student.first_name }} {{ student.last_name }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            .report-container { box-shadow: none !important; padding: 10px !important; }
+        }
+        .report-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 30px rgba(0,0,0,0.1);
+        }
+        .school-header {
+            text-align: center;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .school-logo {
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+        .school-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+        .school-address {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .report-title {
+            background: #2c3e50;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .grade-A { color: #27ae60; font-weight: bold; }
+        .grade-B { color: #f39c12; font-weight: bold; }
+        .grade-C { color: #e67e22; font-weight: bold; }
+        .grade-D { color: #e74c3c; font-weight: bold; }
+        .grade-F { color: #c0392b; font-weight: bold; }
+        .signature-box {
+            border-top: 2px dashed #ddd;
+            padding-top: 20px;
+            margin-top: 30px;
+        }
+        .signature-img {
+            max-height: 60px;
+        }
+        .position-badge {
+            font-size: 18px;
+            background: #3498db;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+        }
+    </style>
 </head>
 <body>
-    <div class="container mt-4">
-        <div class="card">
-            <div class="card-header bg-success text-white">
-                <h4>📄 Student Report</h4>
+    <div class="container mt-4 report-container">
+        <!-- Back Button -->
+        <div class="no-print mb-3">
+            <a href="/headmaster/students/" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> Back to Students
+            </a>
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="bi bi-printer"></i> Print Report
+            </button>
+        </div>
+        
+        <!-- Report Content -->
+        <div class="school-header">
+            {% if school_profile and school_profile.logo %}
+                <img src="{{ school_profile.logo.url }}" alt="School Logo" class="school-logo">
+            {% else %}
+                <div style="font-size: 50px;">🏫</div>
+            {% endif %}
+            <h3 class="school-name">{{ school_profile.school_name|default:"HINAYA PRE AND PRIMARY SCHOOL" }}</h3>
+            <p class="school-address">
+                {% if school_profile %}
+                    {{ school_profile.address|default:"" }}<br>
+                    Phone: {{ school_profile.phone|default:"" }} | Email: {{ school_profile.email|default:"" }}
+                {% endif %}
+            </p>
+        </div>
+        
+        <div class="report-title">
+            <h4 class="mb-0"><i class="bi bi-file-text"></i> ACADEMIC REPORT</h4>
+        </div>
+        
+        <!-- Student Info -->
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <p><span class="info-label">Name:</span> <strong>{{ student.first_name }} {{ student.last_name }}</strong></p>
+                <p><span class="info-label">Gender:</span> {{ student.gender }}</p>
+                <p><span class="info-label">Date of Birth:</span> {{ student.date_of_birth|date:"F d, Y" }}</p>
+                <p><span class="info-label">Class:</span> <strong>{{ student.current_class }}</strong></p>
             </div>
-            <div class="card-body">
-                <h5>{{ student.first_name }} {{ student.last_name }}</h5>
-                <p><strong>Class:</strong> {{ student.current_class }}</p>
-                <p><strong>Parent:</strong> {{ student.parent_name }}</p>
-                <hr>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Subject</th>
-                            <th>Score</th>
-                            <th>Grade</th>
-                            <th>Remarks</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for grade in grades %}
-                        <tr>
-                            <td>{{ grade.subject.name }}</td>
-                            <td>{{ grade.score }}</td>
-                            <td>
-                                {% if grade.score >= 80 %}A
-                                {% elif grade.score >= 60 %}B
-                                {% elif grade.score >= 50 %}C
-                                {% elif grade.score >= 40 %}D
-                                {% else %}F{% endif %}
-                            </td>
-                            <td>{{ grade.remarks }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="4">No grades available</td></tr>
-                        {% endfor %}
-                    </tbody>
-                    <tfoot>
-                        <tr>
-                            <th>Summary</th>
-                            <th>{{ total_score }}</th>
-                            <th>{{ average }}%</th>
-                            <th></th>
-                        </tr>
-                    </tfoot>
-                </table>
-                <h5>Fee Summary</h5>
-                <table class="table table-bordered">
-                    <thead>
-                        <tr>
-                            <th>Term</th>
-                            <th>Total Fee</th>
-                            <th>Paid</th>
-                            <th>Balance</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for fee in fees %}
-                        <tr>
-                            <td>{{ fee.term.name }}</td>
-                            <td>{{ fee.total_fee|floatformat:2 }}</td>
-                            <td>{{ fee.amount_paid|floatformat:2 }}</td>
-                            <td class="{% if fee.balance > 0 %}text-danger{% else %}text-success{% endif %}">
-                                {{ fee.balance|floatformat:2 }}
-                            </td>
-                            <td>{% if fee.is_completed %}✅ Paid{% else %}❌ Pending{% endif %}</td>
-                        </tr>
-                        {% empty %}
-                        <tr><td colspan="5">No fee records</td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <a href="/headmaster/students/" class="btn btn-secondary">Back</a>
-                <button onclick="window.print()" class="btn btn-primary">Print</button>
+            <div class="col-md-6">
+                <p><span class="info-label">Parent/Guardian:</span> <strong>{{ student.parent_name }}</strong></p>
+                <p><span class="info-label">Parent Phone:</span> {{ student.parent_phone }}</p>
+                <p><span class="info-label">Address:</span> {{ student.address|default:"-" }}</p>
+                <p><span class="info-label">Report Date:</span> <strong>{% now "F d, Y" %}</strong></p>
             </div>
+        </div>
+        
+        <!-- Position -->
+        <div class="text-center mb-3">
+            <span class="position-badge">
+                <i class="bi bi-trophy"></i> Position: #{{ position }} / {{ total_students }}
+            </span>
+        </div>
+        
+        <!-- Summary Stats -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="alert alert-info text-center">
+                    <h6>Total Subjects</h6>
+                    <h2>{{ total_subjects }}</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="alert alert-success text-center">
+                    <h6>Total Score</h6>
+                    <h2>{{ total_score }}</h2>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="alert alert-warning text-center">
+                    <h6>Average</h6>
+                    <h2>{{ average }}%</h2>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Grades Table -->
+        <h5 class="mt-3">Academic Performance</h5>
+        <table class="table table-bordered">
+            <thead class="table-secondary">
+                <tr>
+                    <th>Subject</th>
+                    <th>Score</th>
+                    <th>Grade</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for grade in grades %}
+                <tr>
+                    <td><strong>{{ grade.subject.name }}</strong></td>
+                    <td>{{ grade.score }}</td>
+                    <td>
+                        {% if grade.score >= 80 %}
+                            <span class="grade-A">A - Excellent</span>
+                        {% elif grade.score >= 60 %}
+                            <span class="grade-B">B - Good</span>
+                        {% elif grade.score >= 50 %}
+                            <span class="grade-C">C - Satisfactory</span>
+                        {% elif grade.score >= 40 %}
+                            <span class="grade-D">D - Needs Improvement</span>
+                        {% else %}
+                            <span class="grade-F">F - Fail</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ grade.remarks|default:"-" }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">No grades available</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Fee Summary -->
+        <h5 class="mt-3">Fee Summary</h5>
+        <table class="table table-bordered">
+            <thead class="table-secondary">
+                <tr>
+                    <th>Term</th>
+                    <th>Total Fee (TSh)</th>
+                    <th>Amount Paid (TSh)</th>
+                    <th>Balance (TSh)</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for fee in fees %}
+                <tr>
+                    <td>{{ fee.term.name }} - {{ fee.term.year }}</td>
+                    <td>{{ fee.total_fee|floatformat:2|default:"0.00" }}</td>
+                    <td>{{ fee.amount_paid|floatformat:2|default:"0.00" }}</td>
+                    <td class="{% if fee.balance > 0 %}text-danger{% else %}text-success{% endif %}">
+                        {{ fee.balance|floatformat:2|default:"0.00" }}
+                    </td>
+                    <td>
+                        {% if fee.is_completed %}
+                            <span class="badge bg-success">✅ Completed</span>
+                        {% else %}
+                            <span class="badge bg-danger">❌ Pending</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center text-muted">No fee records</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        <!-- Signature -->
+        <div class="signature-box">
+            <div class="row">
+                <div class="col-4 text-center">
+                    <p><strong>Parent/Guardian</strong></p>
+                    <p style="border-bottom: 1px solid #000; width: 80%; margin: 0 auto;"></p>
+                    <p style="font-size: 12px; color: #7f8c8d;">Signature & Date</p>
+                </div>
+                <div class="col-4 text-center">
+                    <p><strong>Class Teacher</strong></p>
+                    <p style="border-bottom: 1px solid #000; width: 80%; margin: 0 auto;"></p>
+                    <p style="font-size: 12px; color: #7f8c8d;">Signature & Date</p>
+                </div>
+                <div class="col-4 text-center">
+                    <p><strong>Principal</strong></p>
+                    {% if school_profile and school_profile.principal_signature %}
+                        <img src="{{ school_profile.principal_signature.url }}" alt="Signature" class="signature-img">
+                    {% else %}
+                        <p style="border-bottom: 1px solid #000; width: 80%; margin: 0 auto;"></p>
+                    {% endif %}
+                    <p style="font-size: 12px; color: #7f8c8d;">
+                        {{ school_profile.principal_name|default:"Head of School" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <div class="text-center mt-4" style="font-size: 12px; color: #7f8c8d; border-top: 1px solid #eee; padding-top: 15px;">
+            <p>© {% now "Y" %} {{ school_profile.school_name|default:"HINAYA PRE AND PRIMARY SCHOOL" }}. All rights reserved.</p>
+            <p>This report is system generated. For inquiries, contact the school.</p>
         </div>
     </div>
 </body>

@@ -407,19 +407,43 @@ def student_report(request, student_id):
     student = get_object_or_404(Student, id=student_id)
     grades = Grade.objects.filter(student=student)
     fees = Fee.objects.filter(student=student)
+    school_profile = SchoolProfile.objects.first()
     
-    total_score = sum([g.score for g in grades]) if grades else 0
+    # Hesabu total na average
+    total_score = 0
+    for grade in grades:
+        total_score += grade.score
+    
     total_subjects = grades.count()
     average = round(total_score / total_subjects, 2) if total_subjects > 0 else 0
+    
+    # Pata nafasi ya mwanafunzi darasani
+    position = '-'
+    total_students = 0
+    if student.current_class:
+        class_students = Student.objects.filter(current_class=student.current_class, is_active=True)
+        total_students = class_students.count()
+        student_ranks = []
+        for s in class_students:
+            s_grades = Grade.objects.filter(student=s)
+            s_avg = sum([g.score for g in s_grades]) / s_grades.count() if s_grades else 0
+            student_ranks.append({'student': s, 'average': s_avg})
+        student_ranks.sort(key=lambda x: x['average'], reverse=True)
+        for idx, item in enumerate(student_ranks, 1):
+            if item['student'].id == student.id:
+                position = idx
+                break
     
     context = {
         'student': student,
         'grades': grades,
         'fees': fees,
+        'school_profile': school_profile,
         'total_score': total_score,
         'total_subjects': total_subjects,
         'average': average,
-        'profile': SchoolProfile.objects.first(),
+        'position': position,
+        'total_students': total_students,
     }
     return render(request, 'headmaster/student_report.html', context)
 
