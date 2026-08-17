@@ -83,7 +83,7 @@
                                         <input type="number" name="score_{{ student.id }}" 
                                                class="form-control" 
                                                min="0" max="100" step="0.01"
-                                               value="{% if student.id in existing_marks.keys %}{{ existing_marks|get_item:student.id }}{% endif %}"
+                                               value="{{ existing_marks|default_if_none:'' }}"
                                                placeholder="Enter score">
                                     </td>
                                 </tr>
